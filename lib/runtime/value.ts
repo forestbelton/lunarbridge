@@ -1,7 +1,32 @@
-export type LuaEnvironment = Record<string, LuaValue>;
+export class LuaEnvironment {
+  parent?: LuaEnvironment;
+  values: Record<string, LuaValue>;
 
-// TODO: Add support for function values
-export type LuaValue = null | boolean | number | string | LuaTable;
+  constructor(parent?: LuaEnvironment, values?: Record<string, LuaValue>) {
+    this.parent = parent;
+    this.values = values || {};
+  }
+
+  get(key: string): LuaValue {
+    let value = null;
+    if (typeof this.values[key] !== "undefined") {
+      value = this.values[key];
+    } else if (typeof this.parent !== "undefined") {
+      value = this.parent.get(key);
+    }
+    return value;
+  }
+}
+
+export type LuaFunction = (...args: LuaValue[]) => LuaValue;
+
+export type LuaValue =
+  | null
+  | boolean
+  | number
+  | string
+  | LuaTable
+  | LuaFunction;
 
 export class LuaTable {
   nextID: number;

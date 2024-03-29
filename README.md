@@ -16,4 +16,5 @@ TODO
 
 - Attributes (`<const>`, `<>`)
 - Coroutines
+- Goto
 - Most of the standard library

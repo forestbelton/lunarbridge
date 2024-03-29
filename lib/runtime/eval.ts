@@ -1,5 +1,6 @@
 import {
   BinaryOperator,
+  Block,
   ConstantExpr,
   Ellipsis,
   FunctionExpr,
@@ -7,7 +8,7 @@ import {
   TableExpr,
   UnaryOperator,
 } from "../parser/ast.js";
-import { ExprVisitor } from "../parser/visitor.js";
+import { ExprVisitor, StatementVisitor } from "../parser/visitor.js";
 import { LuaError, LuaTypeError, getTypeName } from "./utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
@@ -56,6 +57,25 @@ const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
     // @ts-ignore
     "^": (x, y) => Math.pow(x, y),
   };
+
+export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
+  const stmtVisitor: StatementVisitor<void> = null;
+  const exprVisitor = new InterpretExprVisitor(env);
+
+  block.statements.forEach((stmt) => {
+    stmtVisitor.visit(stmt);
+  });
+
+  let value = null;
+  if (block.returnExprs.length === 1) {
+    value = exprVisitor.visit(block.returnExprs[0]);
+  } else if (block.returnExprs.length > 1) {
+    value = new LuaTable(
+      block.returnExprs.map((expr) => exprVisitor.visit(expr))
+    );
+  }
+  return value;
+};
 
 export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   env: LuaEnvironment;
@@ -106,18 +126,22 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   }
 
   func(expr: FunctionExpr): LuaValue {
-    throw new Error("Method not implemented.");
+    return (...args: LuaValue[]) => {
+      const params = {};
+      expr.params.forEach((param, i) => {
+        params[param] = i < args.length ? args[i] : null;
+      });
+      const envWithParams = new LuaEnvironment(this.env, params);
+      return evalBlock(envWithParams, expr.body);
+    };
   }
 
   identifier(expr: Identifier): LuaValue {
-    return typeof this.env[expr.name] !== "undefined"
-      ? this.env[expr.name]
-      : null;
+    return this.env.get(expr.name);
   }
 
   table(expr: TableExpr<LuaValue>): LuaValue {
     const table = new LuaTable();
-
     expr.fields.forEach((field) => {
       if (field instanceof Array) {
         table.set(field[0], field[1]);
@@ -125,7 +149,6 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
         table.insert(field);
       }
     });
-
     return table;
   }
 
@@ -137,6 +160,11 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   }
 
   call(target: LuaValue, args: LuaValue[], method?: string): LuaValue {
-    throw new Error("Method not implemented.");
+    if (typeof target !== "function") {
+      throw new LuaTypeError("call", target);
+    } else if (typeof method !== "undefined") {
+      throw new LuaError("method calls not implemented");
+    }
+    return target(...args);
   }
 }

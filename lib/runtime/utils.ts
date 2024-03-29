@@ -15,6 +15,8 @@ export const getTypeName = (value: LuaValue): string => {
     return "number";
   } else if (typeof value === "boolean") {
     return "boolean";
+  } else if (typeof value === "function") {
+    return "function";
   } else if (value === null) {
     return "nil";
   } else if (value instanceof LuaTable) {

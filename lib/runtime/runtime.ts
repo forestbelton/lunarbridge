@@ -7,7 +7,7 @@ export class LuaRuntime {
   globals: LuaEnvironment;
 
   constructor() {
-    this.globals = {};
+    this.globals = new LuaEnvironment();
   }
 
   execute(expr: string): LuaValue {
