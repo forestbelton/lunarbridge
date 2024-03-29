@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { parse } from "../lib/parser/index.js";
+import { parse } from "../build/parser/index.js";
 import {
   BinOpExpr,
   ConstantExpr,
@@ -9,7 +9,8 @@ import {
   FALSE,
   TRUE,
   NIL,
-} from "../lib/parser/ast.js";
+} from "../build/parser/ast.js";
+import { CallExpr, IndexExpr, UnaryOpExpr } from "../lib/parser/ast.js";
 
 const EPSILON = 0.000001;
 
@@ -30,13 +31,13 @@ describe("expressions", () => {
     expect(result.value).to.be.closeTo(x, EPSILON);
   };
 
-  it("should parse constant keywords", () => {
+  it("constant keywords", () => {
     expect(parseExpr("nil")).to.equal(NIL);
     expect(parseExpr("true")).to.equal(TRUE);
     expect(parseExpr("false")).to.equal(FALSE);
   });
 
-  it("should parse numbers", () => {
+  it("numbers", () => {
     parseInteger("123", 123);
     parseInteger("0xff", 0xff);
     parseInteger("0xBEBADA", 0xbebada);
@@ -47,7 +48,7 @@ describe("expressions", () => {
     parseFloat("0x1.fp10", 1984);
   });
 
-  it("should parse tables", () => {
+  it("tables", () => {
     const result = parseExpr(`{x=1, [y]=true, {1,2,3},}`);
     expect(result).to.be.an.instanceof(TableExpr);
     expect(result.fields).to.have.lengthOf(3);
@@ -62,7 +63,7 @@ describe("expressions", () => {
     );
   });
 
-  it("should parse complex expressions", () => {
+  it("binary operations", () => {
     expect(parseExpr("x < 1 + 2 * 3")).to.deep.equal(
       new BinOpExpr(
         "<",
@@ -81,6 +82,43 @@ describe("expressions", () => {
         new ConstantExpr(1),
         new BinOpExpr("^", new ConstantExpr(2), new ConstantExpr(3))
       )
+    );
+  });
+
+  it("unary operations", () => {
+    expect(parseExpr("#tbl")).to.deep.equal(
+      new UnaryOpExpr("#", new Identifier("tbl"))
+    );
+  });
+
+  it("indexed values", () => {
+    expect(parseExpr("tbl.x")).to.deep.equal(
+      new IndexExpr(new ConstantExpr("x"), new Identifier("tbl"))
+    );
+
+    expect(parseExpr("tbl[1]")).to.deep.equal(
+      new IndexExpr(new ConstantExpr(1), new Identifier("tbl"))
+    );
+
+    expect(parseExpr("tbl1.tbl2.x")).to.deep.equal(
+      new IndexExpr(
+        new ConstantExpr("x"),
+        new IndexExpr(new ConstantExpr("tbl2"), new Identifier("tbl1"))
+      )
+    );
+  });
+
+  it("calls", () => {
+    expect(parseExpr("foo(1,2,3)")).to.deep.equal(
+      new CallExpr(new Identifier("foo"), [
+        new ConstantExpr(1),
+        new ConstantExpr(2),
+        new ConstantExpr(3),
+      ])
+    );
+
+    expect(parseExpr("tbl:method(true)")).to.deep.equal(
+      new CallExpr(new Identifier("tbl"), [new ConstantExpr(true)], "method")
     );
   });
 });

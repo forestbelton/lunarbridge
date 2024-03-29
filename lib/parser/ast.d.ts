@@ -114,7 +114,7 @@ export type Expr =
   | ConstantExpr
   | FunctionExpr
   | Identifier
-  | TableExpr
+  | TableExpr<Expr>
   | IndexExpr
   | CallExpr;
 
@@ -185,17 +185,19 @@ export class FunctionExpr {
   constructor(params: string[], body: Block);
 }
 
-type TableField = [string, Expr] | [Expr, Expr] | Expr;
+type TableField<A> = [string, A] | [A, A] | A;
 
-export class TableExpr {
-  fields: TableField[];
+export class TableExpr<A> {
+  fields: TableField<A>[];
+
+  constructor(fields: TableField<A>[]);
 }
 
 export class IndexExpr {
+  key: Expr;
   target: Expr;
-  key: string | Expr;
 
-  constructor(key: string | Expr, target: Expr);
+  constructor(key: Expr, target: Expr);
 }
 
 export class CallExpr {

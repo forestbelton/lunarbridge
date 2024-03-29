@@ -95,12 +95,12 @@ primary_expr
   / LPAREN expr:expr RPAREN { return expr }
 
 index
-  = DOT name:NAME               { return suffix("index", "name", { name }) }
-  / LBRACKET expr:expr RBRACKET { return suffix("index", "expr", { expr }) }
+  = DOT key:NAME               { return suffix("index", { key: new ConstantExpr(key) }) }
+  / LBRACKET key:expr RBRACKET { return suffix("index", { key }) }
 
 call
-  = COLON method:NAME args:args { return suffix("call", "method", { method, args }) }
-  / args:args                   { return suffix("call", "function", { args }) }
+  = COLON method:NAME args:args { return suffix("call", { method, args }) }
+  / args:args                   { return suffix("call", { args }) }
 
 var          = expr:primary_expr suffixes:(index / call)* &{ return lastSuffixIs("index", suffixes) } { return attachSuffixes(expr, suffixes) }
 functioncall = expr:primary_expr suffixes:(index / call)* &{ return lastSuffixIs("call", suffixes) }  { return attachSuffixes(expr, suffixes) }

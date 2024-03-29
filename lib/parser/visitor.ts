@@ -7,6 +7,8 @@ import {
   FunctionExpr,
   Identifier,
   IndexExpr,
+  TableExpr,
+  TableField,
   UnaryOpExpr,
   UnaryOperator,
 } from "./ast.js";
@@ -17,6 +19,7 @@ export abstract class ExprVisitor<A> {
   abstract constant(expr: ConstantExpr): A;
   abstract func(expr: FunctionExpr): A;
   abstract identifier(expr: Identifier): A;
+  abstract table(expr: TableExpr<A>): A;
   abstract index(target: A, key: string | A): A;
   abstract call(target: A, args: A[], method?: string): A;
 
@@ -29,6 +32,21 @@ export abstract class ExprVisitor<A> {
       return this.constant(expr);
     } else if (expr instanceof FunctionExpr) {
       return this.func(expr);
+    } else if (expr instanceof Identifier) {
+      return this.identifier(expr);
+    } else if (expr instanceof TableExpr) {
+      const fields: TableField<A>[] = expr.fields.map((field) => {
+        if (field instanceof Array) {
+          if (typeof field[0] === "string") {
+            return [field[0], this.visit(field[1])];
+          } else {
+            return [this.visit(field[0]), this.visit(field[1])];
+          }
+        } else {
+          return this.visit(field);
+        }
+      });
+      return this.table(new TableExpr(fields));
     } else if (expr instanceof IndexExpr) {
       let key: string | A =
         typeof expr.key === "string" ? expr.key : this.visit(expr.key);
@@ -40,7 +58,7 @@ export abstract class ExprVisitor<A> {
         expr.method
       );
     } else {
-      throw new Error("unsupported expr");
+      throw new Error("unsupported expr: " + expr);
     }
   }
 }

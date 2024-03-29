@@ -1,3 +1,2 @@
+build/
 node_modules/
-lib/parser/index.js
-lib/runtime.js

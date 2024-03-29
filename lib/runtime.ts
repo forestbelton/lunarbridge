@@ -4,6 +4,7 @@ import {
   Expr,
   FunctionExpr,
   Identifier,
+  TableExpr,
   UnaryOperator,
 } from "./parser/ast.js";
 import { parse } from "./parser/index.js";
@@ -14,6 +15,12 @@ export type LuaValue = null | boolean | number | string | LuaTable;
 
 export class LuaTable {
   items: Record<string | number, LuaValue>;
+
+  get(key: LuaValue): LuaValue {
+    return null;
+  }
+
+  set(key: LuaValue, value: LuaValue) {}
 }
 
 export type LuaEnvironment = Record<string, LuaValue>;
@@ -64,6 +71,23 @@ const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
     "^": (x, y) => Math.pow(x, y),
   };
 
+class LuaError extends Error {}
+
+const getTypeName = (value: LuaValue): string => {
+  if (typeof value === "string") {
+    return "string";
+  } else if (typeof value === "number") {
+    return "number";
+  } else if (typeof value === "boolean") {
+    return "boolean";
+  } else if (value === null) {
+    return "nil";
+  } else if (value instanceof LuaTable) {
+    return "table";
+  }
+  throw new LuaError("tried to get name of unknown type");
+};
+
 class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   env: LuaEnvironment;
 
@@ -94,8 +118,26 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
       : null;
   }
 
-  index(target: LuaValue, key: string | LuaValue): LuaValue {
-    throw new Error("Method not implemented.");
+  table(expr: TableExpr<LuaValue>): LuaValue {
+    const table = new LuaTable();
+    let nextID = 1;
+
+    expr.fields.forEach((field) => {
+      if (field instanceof Array) {
+        table.set(field[0], field[1]);
+      } else {
+        table.set(nextID++, field);
+      }
+    });
+
+    return table;
+  }
+
+  index(target: LuaValue, key: LuaValue): LuaValue {
+    if (!(target instanceof LuaTable)) {
+      throw new LuaError(`attempt to index a ${getTypeName(target)} value`);
+    }
+    return target.get(key);
   }
 
   call(target: LuaValue, args: LuaValue[], method?: string): LuaValue {
@@ -105,6 +147,10 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
 
 export class LuaRuntime {
   globals: LuaEnvironment;
+
+  constructor() {
+    this.globals = {};
+  }
 
   execute(expr: string): LuaValue {
     const result = parse(expr, { startRule: "expr" });
@@ -117,8 +163,6 @@ export class LuaRuntime {
   }
 
   evalExpr(env: LuaEnvironment, expr: Expr): LuaValue {
-    console.log(env);
-    console.log(expr);
     return new InterpretExprVisitor(env).visit(expr);
   }
 }

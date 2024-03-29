@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc lib/runtime.ts",
-    "build-parser": "peggy --allowed-start-rules '*' -o lib/parser/index.js --format es lib/parser/lua.peggy",
+    "build": "bash -c ./build.sh",
     "test": "mocha"
   },
   "keywords": [],
