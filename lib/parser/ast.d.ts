@@ -1,8 +1,109 @@
-export type Stmt = null;
+export class Block {
+  statements: Stmt[];
+  returnExprs: Expr[];
+
+  constructor(statements: Stmt[], returnExprs: Expr[]);
+}
+
+export type Stmt =
+  | AssignStatement
+  | LabelStatement
+  | BreakStatement
+  | DoStatement
+  | WhileStatement
+  | RepeatStatement
+  | IfElseStatement
+  | ForRangeStatement
+  | ForInStatement
+  | FunctionStatement
+  | DeclareStatement
+  | CallStatement;
 
 export class AssignStatement {
   vars: Var[];
   exprs: Expr[];
+
+  constructor(vars: Var[], exprs: Expr[]);
+}
+
+export class LabelStatement {
+  label: string;
+
+  constructor(label: string);
+}
+
+export class BreakStatement {}
+
+export class GotoStatement {
+  label: string;
+
+  constructor(label: string);
+}
+
+export class DoStatement {
+  body: Block;
+
+  constructor(body: Block);
+}
+
+export class WhileStatement {
+  cond: Expr;
+  body: Block;
+
+  constructor(cond: Expr, body: Block);
+}
+
+export class RepeatStatement {
+  cond: Expr;
+  body: Block;
+
+  constructor(cond: Expr, body: Block);
+}
+
+export class IfElseStatement {
+  ifBodies: [Expr, Block][];
+  elseBody: [Expr, Block] | null;
+
+  constructor(ifBodies: [Expr, Block][], elseBody: [Expr, Block] | null);
+}
+
+export class ForRangeStatement {
+  name: string;
+  start: Expr;
+  end: Expr;
+  step: Expr;
+  body: Block;
+
+  constructor(name: string, start: Expr, end: Expr, step: Expr, body: Block);
+}
+
+export class ForInStatement {
+  names: string[];
+  exprs: Expr[];
+  body: Block;
+
+  constructor(names: string[], exprs: Expr[], body: Block);
+}
+
+export class FunctionStatement {
+  name: string;
+  local: boolean;
+  func: FunctionExpr;
+
+  constructor(name: string, local: boolean, func: FunctionExpr);
+}
+
+export class DeclareStatement {
+  names: string[];
+  exprs: Expr[];
+
+  constructor(names: string[], exprs: Expr[]);
+}
+
+export class CallStatement {
+  call: CallExpr;
+
+  constructor(call: CallExpr);
 }
 
 export type Expr =
