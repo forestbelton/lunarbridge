@@ -1,5 +1,10 @@
+import util from "util";
 import { parse } from "./lib/parser/index.js";
 
-const result = parse(`z or true`);
+const result = parse(`tbl = {
+    x = 1,
+    [y] = 2,
+    3,
+}`);
 
-console.log(result);
+console.log(util.inspect(result, { depth: null }));

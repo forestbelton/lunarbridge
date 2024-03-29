@@ -10,9 +10,16 @@ export type Expr =
   | BinOpExpr
   | ConstantExpr
   | FunctionExpr
+  | Identifier
   | TableExpr
   | IndexExpr
   | CallExpr;
+
+export class Identifier {
+  name: string;
+
+  constructor(name: string);
+}
 
 export type UnaryOperator = "-" | "not" | "#" | "~";
 
@@ -69,15 +76,14 @@ export const TRUE: ConstantExpr;
 export const FALSE: ConstantExpr;
 
 export class FunctionExpr {
-  name: string | null;
   params: string[];
   body: Block;
-  local: boolean;
 
-  constructor(
-    name: string | null,
-    params: string[],
-    body: Block,
-    local: boolean
-  );
+  constructor(params: string[], body: Block);
+}
+
+type TableField = [string, Expr] | [Expr, Expr] | Expr;
+
+export class TableExpr {
+  fields: TableField[];
 }

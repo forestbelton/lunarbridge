@@ -1,54 +1,67 @@
 {{
   import {
+    AssignStatement,
     BinOpExpr,
+    Block,
+    BreakStatement,
+    CallStatement,
     ConstantExpr,
+    DeclareStatement,
+    DoStatement,
     FunctionExpr,
+    GotoStatement,
+    ELLIPSIS,
     FALSE,
+    ForRangeStatement,
+    ForInStatement,
+    FunctionStatement,
+    Identifier,
+    IfElseStatement,
+    LabelStatement,
     NIL,
+    RepeatStatement,
+    TableExpr,
     TRUE,
     UnaryOpExpr,
+    WhileStatement,
   } from "./ast.js";
 
   import {
+    attachSuffixes,
     isKeyword,
     lassoc,
     lassoc1,
+    lastSuffixIs,
     parseDecimal,
     parseExpt,
     parseHex,
     suffix,
     unary
   } from "./utils.js";
-
-  const ident = (name) => ({ type: "ident", name });
 }}
 
-root = expr
+block = statements:statement* exprs:(RETURN @exprs? SEMI?)? { return new Block(statements, exprs || []); }
 
-chunk = block
+statement
+  = SEMI
+  / vars:var|1.., COMMA| EQUALS exprs:exprs                                              { return new AssignStatement(vars, exprs) }
+  / DCOLON label:NAME DCOLON                                                             { return new LabelStatement(label) }
+  / BREAK                                                                                { return new BreakStatement() }
+  / GOTO label:NAME                                                                      { return new GotoStatement(label) }
+  / DO body:block END                                                                    { return new DoStatement(body) }
+  / WHILE cond:expr DO body:block END                                                    { return new WhileStatement(cond, body) }
+  / REPEAT body:block UNTIL cond:expr                                                    { return new RepeatStatement(cond, body) }
+  / IF ifbodies:ifbody|1.., ELSEIF| elsebody:(ELSE @block)? END                          { return new IfElseStatement(ifbodies, elsebody) }
+  / FOR name:NAME EQUALS start:expr COMMA end:expr step:(COMMA @expr)? DO body:block END { return new ForRangeStatement(name, start, end, step, body) }
+  / FOR names:NAME|1.., COMMA| IN exprs:exprs DO body:block END                          { return new ForInStatement(names, exprs, body) }
+  / local:LOCAL? FUNCTION name:funcname func:funcbody                                    { return new FunctionStatement(name, !!local, func) }
+  / LOCAL names:attnamelist exprs:(EQUALS @exprs)?                                       { return new DeclareStatement(names, exprs) }
+  / call:functioncall                                                                    { return new CallStatement(call) }
 
-block = statements:stat* exprs:(RETURN @exprs? SEMI?)? { return new Block(statements, exprs || []); }
-
-stat = SEMI
-  / vars:var|1.., COMMA| EQUALS exprs:exprs { return new AssignStatement(vars, exprs) }
-  / DCOLON label:NAME DCOLON                { return new LabelStatement(label) }
-  / BREAK                                   { return new BreakStatement() }
-  / GOTO label:NAME                         { return new GotoStatement(label) }
-  / DO body:block END                       { return new DoStatement(body) }
-  / WHILE cond:expr DO body:block END       { return new WhileStatement(cond, body) }
-  / REPEAT body:block UNTIL cond:expr       { return new RepeatStatement(cond, body) }
-  / IF expr THEN block (ELSEIF expr THEN block)* elseblock:(ELSE @block)? END
-  / FOR NAME EQUALS expr COMMA expr (COMMA expr)? DO block END
-  / FOR names:NAME|1.., COMMA| IN exprs DO block END
-  / local:LOCAL? FUNCTION name:funcname body:funcbody{ return { type: "function", local: !!local, name, params: body.params, body: body.body } }
-  / LOCAL attnamelist (EQUALS exprs)?
-  / functioncall
-
-// TODO: Support attributes
+ifbody      = cond:expr THEN body:block             { return [cond, body] }
+funcname    = NAME (DOT NAME)* (COLON NAME)?
 attnamelist = h:NAME attrib t:(COMMA @NAME attrib)* { return [h, ...t] }
 attrib      = (LT NAME GT)?
-
-funcname = NAME (DOT NAME)* (COLON NAME)?
 
 // Expressions
 exprs       = expr|1.., COMMA|
@@ -67,42 +80,40 @@ unary_expr  = ops:UNARYOP* expr:expt_expr                  { return unary(ops ||
 expt_expr   = left:base_expr right:(CARET @expt_expr)?     { return right ? new BinOpExpr('^', left, right) : left }
 
 base_expr
-  = NIL             { return NIL }
-  / FALSE           { return FALSE }
-  / TRUE            { return TRUE }
-  / n:numeral       { return new ConstantExpr(n) }
-  / s:literalstring { return new ConstantExpr(s) }
-  / ELLIPSIS
-  / functiondef
+  = NIL                                        { return NIL }
+  / FALSE                                      { return FALSE }
+  / TRUE                                       { return TRUE }
+  / n:numeral                                  { return new ConstantExpr(n) }
+  / s:literalstring                            { return new ConstantExpr(s) }
+  / ELLIPSIS                                   { return ELLIPSIS }
+  / FUNCTION func:funcbody                     { return func }
   / tableconstructor
-  / suffix_expr
-
-suffix_expr = expr:primary_expr suffixes:(index / call)* { return suffix(expr, suffixes) }
+  / expr:primary_expr suffixes:(index / call)* { return attachSuffixes(expr, suffixes) }
 
 primary_expr
-  = name:NAME               { return ident(name) }
+  = name:NAME               { return new Identifier(name) }
   / LPAREN expr:expr RPAREN { return expr }
 
 index
-  = DOT name:NAME               { return { type: "index", kind: "name", name } }
-  / LBRACKET expr:expr RBRACKET { return { type: "index", kind: "expr", expr } }
+  = DOT name:NAME               { return suffix("index", "name", { name }) }
+  / LBRACKET expr:expr RBRACKET { return suffix("index", "expr", { expr }) }
 
 call
-  = COLON method:NAME args:args { return { type: "call", kind: "method", method, args } }
-  / args:args                   { return { type: "call", kind: "function", args } }
+  = COLON method:NAME args:args { return suffix("call", "method", { method, args }) }
+  / args:args                   { return suffix("call", "function", { args }) }
 
-var = expr:primary_expr suffixes:(index / call)* &{return suffixes.length === 0 || suffixes[suffixes.length - 1].type == "index"} { return suffix(expr, suffixes) }
-functioncall = expr:primary_expr suffixes:(index / call)* &{return suffixes.length === 0 || suffixes[suffixes.length - 1].type == "call"} { return suffix(expr, suffixes) }
+var          = expr:primary_expr suffixes:(index / call)* &{ return lastSuffixIs("index", suffixes) } { return attachSuffixes(expr, suffixes) }
+functioncall = expr:primary_expr suffixes:(index / call)* &{ return lastSuffixIs("call", suffixes) }  { return attachSuffixes(expr, suffixes) }
 
 args
   = LPAREN args:exprs? RPAREN { return args || [] }
   / table:tableconstructor    { return [table] }
   / str:literalstring         { return [str] }
 
-functiondef = FUNCTION func:funcbody                       { return func }
-funcbody    = LPAREN params:parlist? RPAREN body:block END { return new FunctionExpr(null, params, body || [], false); }
+funcbody = LPAREN params:parlist? RPAREN body:block END { return new FunctionExpr(null, params, body || [], false); }
 
-parlist = names:NAME|1.., COMMA| varargs:(COMMA ELLIPSIS)? {
+parlist
+  = names:NAME|1.., COMMA| varargs:(COMMA ELLIPSIS)? {
     if (varargs) {
     	names.push("...")
     }
@@ -110,12 +121,12 @@ parlist = names:NAME|1.., COMMA| varargs:(COMMA ELLIPSIS)? {
   }
   / ELLIPSIS { return ["..."] }
 
-tableconstructor = LBRACE fields:field|.., (COMMA / SEMI)| RBRACE { return { type: "table", fields } }
+tableconstructor = LBRACE fields:field|.., (COMMA / SEMI)| (COMMA / SEMI)? RBRACE { return new TableExpr(fields) }
 
 field
-  = LBRACKET key:expr RBRACKET EQUALS value:expr { return { type: "expr_key", key, value } }
-  / key:NAME EQUALS value:expr                   { return { type: "name_key", key, value } }
-  / expr:expr                                    { return { type: "field", expr } }
+  = LBRACKET key:expr RBRACKET EQUALS value:expr { return [key, value] }
+  / key:NAME EQUALS value:expr                   { return [key, value] }
+  / expr:expr                                    { return expr }
 
 // Terminals
 numeral = data:(hex / decimal) WS                                                    { return data }
