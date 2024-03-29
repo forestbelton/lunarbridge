@@ -191,14 +191,11 @@ export class TableExpr {
   fields: TableField[];
 }
 
-type IndexKind = "name" | "expr";
-
 export class IndexExpr {
   target: Expr;
-  kind: IndexKind;
   key: string | Expr;
 
-  constructor(kind: IndexKind, key: string | Expr, target: Expr);
+  constructor(key: string | Expr, target: Expr);
 }
 
 export class CallExpr {
