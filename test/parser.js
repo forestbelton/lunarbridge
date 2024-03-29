@@ -2,6 +2,9 @@ import { expect } from "chai";
 
 import { parse } from "../build/parser/parser.js";
 import {
+  CallExpr,
+  IndexExpr,
+  UnaryOpExpr,
   BinOpExpr,
   ConstantExpr,
   Identifier,
@@ -10,7 +13,6 @@ import {
   TRUE,
   NIL,
 } from "../build/parser/ast.js";
-import { CallExpr, IndexExpr, UnaryOpExpr } from "../lib/parser/ast.js";
 
 const EPSILON = 0.000001;
 
