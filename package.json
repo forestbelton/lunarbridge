@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc lib/runtime.ts",
     "build-parser": "peggy --allowed-start-rules '*' -o lib/parser/index.js --format es lib/parser/lua.peggy",
     "test": "mocha"
   },
@@ -14,6 +15,7 @@
   "devDependencies": {
     "chai": "^5.1.0",
     "mocha": "^10.4.0",
-    "peggy": "^4.0.2"
+    "peggy": "^4.0.2",
+    "typescript": "^5.4.3"
   }
 }

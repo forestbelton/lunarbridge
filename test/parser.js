@@ -1,7 +1,15 @@
 import { expect } from "chai";
 
 import { parse } from "../lib/parser/index.js";
-import { ConstantExpr, FALSE, TRUE, NIL } from "../lib/parser/ast.js";
+import {
+  BinOpExpr,
+  ConstantExpr,
+  Identifier,
+  TableExpr,
+  FALSE,
+  TRUE,
+  NIL,
+} from "../lib/parser/ast.js";
 
 const EPSILON = 0.000001;
 
@@ -37,5 +45,42 @@ describe("expressions", () => {
     parseFloat("0.31416E1", 3.1416);
     parseFloat("34e1", 340);
     parseFloat("0x1.fp10", 1984);
+  });
+
+  it("should parse tables", () => {
+    const result = parseExpr(`{x=1, [y]=true, {1,2,3},}`);
+    expect(result).to.be.an.instanceof(TableExpr);
+    expect(result.fields).to.have.lengthOf(3);
+    expect(result.fields[0]).to.deep.equal(["x", new ConstantExpr(1)]);
+    expect(result.fields[1]).to.deep.equal([new Identifier("y"), TRUE]);
+    expect(result.fields[2]).to.deep.equal(
+      new TableExpr([
+        new ConstantExpr(1),
+        new ConstantExpr(2),
+        new ConstantExpr(3),
+      ])
+    );
+  });
+
+  it("should parse complex expressions", () => {
+    expect(parseExpr("x < 1 + 2 * 3")).to.deep.equal(
+      new BinOpExpr(
+        "<",
+        new Identifier("x"),
+        new BinOpExpr(
+          "+",
+          new ConstantExpr(1),
+          new BinOpExpr("*", new ConstantExpr(2), new ConstantExpr(3))
+        )
+      )
+    );
+
+    expect(parseExpr("1 ^ 2 ^ 3")).to.deep.equal(
+      new BinOpExpr(
+        "^",
+        new ConstantExpr(1),
+        new BinOpExpr("^", new ConstantExpr(2), new ConstantExpr(3))
+      )
+    );
   });
 });

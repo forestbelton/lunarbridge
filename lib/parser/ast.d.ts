@@ -19,6 +19,8 @@ export type Stmt =
   | DeclareStatement
   | CallStatement;
 
+export type Var = Identifier | IndexExpr;
+
 export class AssignStatement {
   vars: Var[];
   exprs: Expr[];
@@ -187,4 +189,22 @@ type TableField = [string, Expr] | [Expr, Expr] | Expr;
 
 export class TableExpr {
   fields: TableField[];
+}
+
+type IndexKind = "name" | "expr";
+
+export class IndexExpr {
+  target: Expr;
+  kind: IndexKind;
+  key: string | Expr;
+
+  constructor(kind: IndexKind, key: string | Expr, target: Expr);
+}
+
+export class CallExpr {
+  target: Expr;
+  args: Expr[];
+  method?: string;
+
+  constructor(target: Expr, args: Expr[], method?: string);
 }

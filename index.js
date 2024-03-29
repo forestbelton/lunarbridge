@@ -1,10 +1,11 @@
-import util from "util";
-import { parse } from "./lib/parser/index.js";
+import { LuaRuntime } from "./lib/runtime.js";
 
-const result = parse(`tbl = {
+const runtime = new LuaRuntime();
+
+runtime.executeScript(`
+tbl = {
     x = 1,
-    [y] = 2,
+    ["y"] = 2,
     3,
-}`);
-
-console.log(util.inspect(result, { depth: null }));
+}
+`);
