@@ -1,0 +1,17 @@
+{
+  "name": "lunarbridge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build-parser": "peggy -o lib/parser/index.js --format es lib/parser/lua.peggy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "peggy": "^4.0.2"
+  }
+}
