@@ -5,13 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build-parser": "peggy -o lib/parser/index.js --format es lib/parser/lua.peggy",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-parser": "peggy --allowed-start-rules '*' -o lib/parser/index.js --format es lib/parser/lua.peggy",
+    "test": "mocha"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "chai": "^5.1.0",
+    "mocha": "^10.4.0",
     "peggy": "^4.0.2"
   }
 }
