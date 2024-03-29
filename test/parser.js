@@ -12,6 +12,8 @@ import {
   FALSE,
   TRUE,
   NIL,
+  FunctionExpr,
+  Block,
 } from "../build/parser/ast.js";
 
 const EPSILON = 0.000001;
@@ -107,6 +109,12 @@ describe("expressions", () => {
         new ConstantExpr("x"),
         new IndexExpr(new ConstantExpr("tbl2"), new Identifier("tbl1"))
       )
+    );
+  });
+
+  it("functions", () => {
+    expect(parseExpr("function(x, y) return 1 end")).to.deep.equal(
+      new FunctionExpr(["x", "y"], new Block([], [new ConstantExpr(1)]))
     );
   });
 

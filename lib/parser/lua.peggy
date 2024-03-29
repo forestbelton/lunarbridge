@@ -110,7 +110,7 @@ args
   / table:tableconstructor    { return [table] }
   / str:literalstring         { return [str] }
 
-funcbody = LPAREN params:parlist? RPAREN body:block END { return new FunctionExpr(null, params, body || [], false); }
+funcbody = LPAREN params:parlist? RPAREN body:block END { return new FunctionExpr(params || [], body); }
 
 parlist
   = names:NAME|1.., COMMA| varargs:(COMMA ELLIPSIS)? {

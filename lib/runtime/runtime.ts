@@ -6,8 +6,8 @@ import { LuaEnvironment, LuaValue } from "./value.js";
 export class LuaRuntime {
   globals: LuaEnvironment;
 
-  constructor() {
-    this.globals = new LuaEnvironment();
+  constructor(globals?: LuaEnvironment) {
+    this.globals = globals || new LuaEnvironment();
   }
 
   execute(expr: string): LuaValue {
