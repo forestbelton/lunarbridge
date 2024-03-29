@@ -1,16 +1,29 @@
 import {
+  AssignStatement,
   BinOpExpr,
   BinaryOperator,
+  BreakStatement,
   CallExpr,
+  CallStatement,
   ConstantExpr,
+  DeclareStatement,
+  DoStatement,
   Expr,
+  ForInStatement,
+  ForRangeStatement,
   FunctionExpr,
+  FunctionStatement,
   Identifier,
+  IfElseStatement,
   IndexExpr,
+  LabelStatement,
+  RepeatStatement,
+  Stmt,
   TableExpr,
   TableField,
   UnaryOpExpr,
   UnaryOperator,
+  WhileStatement,
 } from "./ast.js";
 
 export abstract class ExprVisitor<A> {
@@ -59,6 +72,51 @@ export abstract class ExprVisitor<A> {
       );
     } else {
       throw new Error("unsupported expr: " + expr);
+    }
+  }
+}
+
+export abstract class StatementVisitor<A> {
+  abstract assign(stmt: AssignStatement): A;
+  abstract label(stmt: LabelStatement): A;
+  abstract break(stmt: BreakStatement): A;
+  abstract do(stmt: DoStatement): A;
+  abstract while(stmt: WhileStatement): A;
+  abstract repeat(stmt: RepeatStatement): A;
+  abstract ifelse(stmt: IfElseStatement): A;
+  abstract forrange(stmt: ForRangeStatement): A;
+  abstract forin(stmt: ForInStatement): A;
+  abstract func(stmt: FunctionStatement): A;
+  abstract declare(stmt: DeclareStatement): A;
+  abstract call(stmt: CallStatement): A;
+
+  visit(stmt: Stmt): A {
+    if (stmt instanceof AssignStatement) {
+      return this.assign(stmt);
+    } else if (stmt instanceof LabelStatement) {
+      return this.label(stmt);
+    } else if (stmt instanceof BreakStatement) {
+      this.break(stmt);
+    } else if (stmt instanceof DoStatement) {
+      this.do(stmt);
+    } else if (stmt instanceof WhileStatement) {
+      this.while(stmt);
+    } else if (stmt instanceof RepeatStatement) {
+      this.repeat(stmt);
+    } else if (stmt instanceof IfElseStatement) {
+      this.ifelse(stmt);
+    } else if (stmt instanceof ForRangeStatement) {
+      this.forrange(stmt);
+    } else if (stmt instanceof ForInStatement) {
+      this.forin(stmt);
+    } else if (stmt instanceof FunctionStatement) {
+      this.func(stmt);
+    } else if (stmt instanceof DeclareStatement) {
+      this.declare(stmt);
+    } else if (stmt instanceof CallStatement) {
+      this.call(stmt);
+    } else {
+      throw new Error("unsupported stmt: " + stmt);
     }
   }
 }

@@ -1,29 +1,15 @@
 import {
   BinaryOperator,
   ConstantExpr,
-  Expr,
+  Ellipsis,
   FunctionExpr,
   Identifier,
   TableExpr,
   UnaryOperator,
-} from "./parser/ast.js";
-import { parse } from "./parser/index.js";
-import { ExprVisitor } from "./parser/visitor.js";
-
-// TODO: Add support for function values
-export type LuaValue = null | boolean | number | string | LuaTable;
-
-export class LuaTable {
-  items: Record<string | number, LuaValue>;
-
-  get(key: LuaValue): LuaValue {
-    return null;
-  }
-
-  set(key: LuaValue, value: LuaValue) {}
-}
-
-export type LuaEnvironment = Record<string, LuaValue>;
+} from "../parser/ast.js";
+import { ExprVisitor } from "../parser/visitor.js";
+import { LuaError, LuaTypeError, getTypeName } from "./utils.js";
+import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
 const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
   {
@@ -71,24 +57,7 @@ const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
     "^": (x, y) => Math.pow(x, y),
   };
 
-class LuaError extends Error {}
-
-const getTypeName = (value: LuaValue): string => {
-  if (typeof value === "string") {
-    return "string";
-  } else if (typeof value === "number") {
-    return "number";
-  } else if (typeof value === "boolean") {
-    return "boolean";
-  } else if (value === null) {
-    return "nil";
-  } else if (value instanceof LuaTable) {
-    return "table";
-  }
-  throw new LuaError("tried to get name of unknown type");
-};
-
-class InterpretExprVisitor extends ExprVisitor<LuaValue> {
+export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   env: LuaEnvironment;
 
   constructor(env: LuaEnvironment) {
@@ -97,7 +66,32 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   }
 
   unaryOp(op: UnaryOperator, expr: LuaValue): LuaValue {
-    throw new Error("Method not implemented.");
+    switch (op) {
+      case "~":
+        if (typeof expr === "number") {
+          return ~expr;
+        } else {
+          throw new LuaTypeError("perform bitwise operation on", expr);
+        }
+      case "-":
+        if (typeof expr === "number") {
+          return -expr;
+        } else {
+          throw new LuaTypeError("perform negation on", expr);
+        }
+      case "not":
+        return expr === null || expr === false;
+      case "#":
+        if (typeof expr === "string") {
+          return expr.length;
+        } else if (expr instanceof LuaTable) {
+          return expr.size();
+        } else {
+          throw new LuaTypeError("get length of", expr);
+        }
+      default:
+        throw new LuaError(`unsupported unary operator ${op}`);
+    }
   }
 
   binOp(op: BinaryOperator, left: LuaValue, right: LuaValue): LuaValue {
@@ -105,6 +99,9 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   }
 
   constant(expr: ConstantExpr): LuaValue {
+    if (expr.value instanceof Ellipsis) {
+      throw new LuaError("varargs not implemented");
+    }
     return expr.value;
   }
 
@@ -120,13 +117,12 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
 
   table(expr: TableExpr<LuaValue>): LuaValue {
     const table = new LuaTable();
-    let nextID = 1;
 
     expr.fields.forEach((field) => {
       if (field instanceof Array) {
         table.set(field[0], field[1]);
       } else {
-        table.set(nextID++, field);
+        table.insert(field);
       }
     });
 
@@ -142,27 +138,5 @@ class InterpretExprVisitor extends ExprVisitor<LuaValue> {
 
   call(target: LuaValue, args: LuaValue[], method?: string): LuaValue {
     throw new Error("Method not implemented.");
-  }
-}
-
-export class LuaRuntime {
-  globals: LuaEnvironment;
-
-  constructor() {
-    this.globals = {};
-  }
-
-  execute(expr: string): LuaValue {
-    const result = parse(expr, { startRule: "expr" });
-    return this.evalExpr(this.globals, result);
-  }
-
-  executeScript(script: string) {
-    const result = parse(script);
-    console.log(result);
-  }
-
-  evalExpr(env: LuaEnvironment, expr: Expr): LuaValue {
-    return new InterpretExprVisitor(env).visit(expr);
   }
 }
