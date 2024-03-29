@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { parse } from "../build/parser/index.js";
+import { parse } from "../build/parser/parser.js";
 import {
   BinOpExpr,
   ConstantExpr,
