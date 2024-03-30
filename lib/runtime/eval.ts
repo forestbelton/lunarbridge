@@ -1,15 +1,34 @@
 import {
+  AssignStatement,
   BinaryOperator,
   Block,
+  BreakStatement,
+  CallStatement,
   ConstantExpr,
+  DeclareStatement,
+  DoStatement,
   Ellipsis,
+  ForInStatement,
+  ForRangeStatement,
   FunctionExpr,
+  FunctionStatement,
   Identifier,
+  IfElseStatement,
+  LabelStatement,
+  RepeatStatement,
   TableExpr,
   UnaryOperator,
+  Var,
+  WhileStatement,
 } from "../parser/ast.js";
 import { ExprVisitor, StatementVisitor } from "../parser/visitor.js";
-import { LuaError, LuaTypeError, getTypeName } from "./utils.js";
+import {
+  LuaError,
+  LuaTypeError,
+  getTypeName,
+  isFalsy,
+  isTruthy,
+} from "./utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
 const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
@@ -59,7 +78,7 @@ const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
   };
 
 export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
-  const stmtVisitor: StatementVisitor<void> = null;
+  const stmtVisitor = new InterpretStatementVisitor(env);
   const exprVisitor = new InterpretExprVisitor(env);
 
   block.statements.forEach((stmt) => {
@@ -70,6 +89,7 @@ export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
   if (block.returnExprs.length === 1) {
     value = exprVisitor.visit(block.returnExprs[0]);
   } else if (block.returnExprs.length > 1) {
+    // TODO: Fix this, it's not really correct.
     value = new LuaTable(
       block.returnExprs.map((expr) => exprVisitor.visit(expr))
     );
@@ -100,7 +120,7 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
           throw new LuaTypeError("perform negation on", expr);
         }
       case "not":
-        return expr === null || expr === false;
+        return isFalsy(expr);
       case "#":
         if (typeof expr === "string") {
           return expr.length;
@@ -166,5 +186,115 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
       throw new LuaError("method calls not implemented");
     }
     return target(...args);
+  }
+}
+
+export class InterpretStatementVisitor extends StatementVisitor<void> {
+  env: LuaEnvironment;
+  exprVisitor: InterpretExprVisitor;
+
+  constructor(env: LuaEnvironment) {
+    super();
+    this.env = env;
+    this.exprVisitor = new InterpretExprVisitor(env);
+  }
+
+  assign(stmt: AssignStatement): void {
+    stmt.vars.forEach((v, i) => {
+      const expr =
+        i < stmt.exprs.length ? this.exprVisitor.visit(stmt.exprs[i]) : null;
+      this._setVar(v, expr);
+    });
+  }
+
+  _setVar(v: Var, expr: LuaValue) {
+    if (v instanceof Identifier) {
+      this.env.set(v.name, expr);
+    } else {
+      throw new LuaError("complex assignment not implemented");
+    }
+  }
+
+  label(stmt: LabelStatement): void {
+    throw new Error("Method not implemented.");
+  }
+
+  break(stmt: BreakStatement): void {
+    throw new Error("Method not implemented.");
+  }
+
+  do(stmt: DoStatement): void {
+    throw new Error("Method not implemented.");
+  }
+
+  while(stmt: WhileStatement): void {
+    let cond = this.exprVisitor.visit(stmt.cond);
+    while (isTruthy(cond)) {
+      evalBlock(new LuaEnvironment(this.env), stmt.body);
+      cond = this.exprVisitor.visit(stmt.cond);
+    }
+  }
+
+  repeat(stmt: RepeatStatement): void {
+    let done = false;
+    while (!done) {
+      evalBlock(new LuaEnvironment(this.env), stmt.body);
+      // TODO: Pretty sure cond has access to block's scope?
+      done = isTruthy(this.exprVisitor.visit(stmt.cond));
+    }
+  }
+
+  ifelse(stmt: IfElseStatement): void {
+    throw new Error("Method not implemented.");
+  }
+
+  forrange(stmt: ForRangeStatement): void {
+    let index = this.exprVisitor.visit(stmt.start);
+    if (typeof index !== "number") {
+      throw new LuaError(
+        `bad 'for' limit (number expected, got ${getTypeName(index)})`
+      );
+    }
+
+    const end = this.exprVisitor.visit(stmt.end);
+    if (typeof end !== "number") {
+      throw new LuaError(
+        `bad 'for' limit (number expected, got ${getTypeName(end)})`
+      );
+    }
+
+    const step = this.exprVisitor.visit(stmt.step);
+    if (typeof step !== "number") {
+      throw new LuaError(
+        `bad 'for' step (number expected, got ${getTypeName(index)})`
+      );
+    }
+
+    const env = new LuaEnvironment(this.env, { [stmt.name]: index });
+    while (index != end) {
+      evalBlock(env, stmt.body);
+      index += step;
+      env.set(stmt.name, index);
+    }
+  }
+
+  forin(stmt: ForInStatement): void {
+    throw new Error("Method not implemented.");
+  }
+
+  func(stmt: FunctionStatement): void {
+    this.env.set(stmt.name, this.exprVisitor.visit(stmt.func));
+  }
+
+  declare(stmt: DeclareStatement): void {
+    stmt.names.forEach((name, i) => {
+      const expr =
+        i < stmt.exprs.length ? this.exprVisitor.visit(stmt.exprs[i]) : null;
+      this.env.set(name, expr);
+    });
+  }
+
+  call(stmt: CallStatement): void {
+    this.exprVisitor.visit(stmt.call);
   }
 }

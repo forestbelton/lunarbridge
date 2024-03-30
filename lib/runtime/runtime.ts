@@ -1,6 +1,6 @@
 import { Expr } from "../parser/ast.js";
 import { parse } from "../parser/parser.js";
-import { InterpretExprVisitor } from "./eval.js";
+import { InterpretExprVisitor, evalBlock } from "./eval.js";
 import { LuaEnvironment, LuaValue } from "./value.js";
 
 export class LuaRuntime {
@@ -10,17 +10,13 @@ export class LuaRuntime {
     this.globals = globals || new LuaEnvironment();
   }
 
-  execute(expr: string): LuaValue {
-    const result = parse(expr, { startRule: "expr" });
-    return this.evalExpr(this.globals, result);
+  execute(rawExpr: string): LuaValue {
+    const expr = parse(rawExpr, { startRule: "expr" });
+    return new InterpretExprVisitor(this.globals).visit(expr);
   }
 
   executeScript(script: string) {
-    const result = parse(script);
-    console.log(result);
-  }
-
-  evalExpr(env: LuaEnvironment, expr: Expr): LuaValue {
-    return new InterpretExprVisitor(env).visit(expr);
+    const block = parse(script);
+    evalBlock(this.globals, block);
   }
 }

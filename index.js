@@ -1,16 +1,17 @@
-import { parse } from "./build/parser/parser.js";
 import { LuaRuntime } from "./build/runtime/runtime.js";
-import { LuaEnvironment, LuaTable } from "./build/runtime/value.js";
 
-const runtime = new LuaRuntime(
-  new LuaEnvironment(undefined, {
-    a: new LuaTable([1, 2, 3]),
-  })
-);
+const runtime = new LuaRuntime();
+runtime.executeScript(`
+  function fib(n)
+    a = 1
+    b = 1
+    for i = 1, n do
+      t = a + b
+      a = b
+      b = t
+    end
+    return a
+  end
+`);
 
-// console.log("a[1] =", runtime.execute(`a[1]`));
-// console.log("a[4] =", runtime.execute(`a[4]`));
-// console.log("b =", runtime.execute("b"));
-// console.log(parse("() return 1 end", { startRule: "funcbody" }));
-
-console.log(runtime.execute("(function() return 1 end)()"));
+console.log(runtime.execute("fib(10)"));

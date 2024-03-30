@@ -40,10 +40,12 @@
   } from "./utils.js";
 }}
 
-block = statements:statement* exprs:(RETURN @exprs? SEMI?)? { return new Block(statements, exprs || []); }
+chunk = WS b:block { return b }
+
+block = stmts:statement* exprs:(RETURN @exprs? SEMI?)? { return new Block(stmts.filter(stmt => stmt !== null), exprs || []); }
 
 statement
-  = SEMI
+  = SEMI                                                                                 { return null }
   / vars:var|1.., COMMA| EQUALS exprs:exprs                                              { return new AssignStatement(vars, exprs) }
   / DCOLON label:NAME DCOLON                                                             { return new LabelStatement(label) }
   / BREAK                                                                                { return new BreakStatement() }
@@ -52,14 +54,14 @@ statement
   / WHILE cond:expr DO body:block END                                                    { return new WhileStatement(cond, body) }
   / REPEAT body:block UNTIL cond:expr                                                    { return new RepeatStatement(cond, body) }
   / IF ifbodies:ifbody|1.., ELSEIF| elsebody:(ELSE @block)? END                          { return new IfElseStatement(ifbodies, elsebody) }
-  / FOR name:NAME EQUALS start:expr COMMA end:expr step:(COMMA @expr)? DO body:block END { return new ForRangeStatement(name, start, end, step, body) }
+  / FOR name:NAME EQUALS start:expr COMMA end:expr step:(COMMA @expr)? DO body:block END { return new ForRangeStatement(name, start, end, step || new ConstantExpr(1), body) }
   / FOR names:NAME|1.., COMMA| IN exprs:exprs DO body:block END                          { return new ForInStatement(names, exprs, body) }
   / local:LOCAL? FUNCTION name:funcname func:funcbody                                    { return new FunctionStatement(name, !!local, func) }
   / LOCAL names:attnamelist exprs:(EQUALS @exprs)?                                       { return new DeclareStatement(names, exprs) }
   / call:functioncall                                                                    { return new CallStatement(call) }
 
 ifbody      = cond:expr THEN body:block             { return [cond, body] }
-funcname    = NAME (DOT NAME)* (COLON NAME)?
+funcname    = $(NAME (DOT NAME)* (COLON NAME)?)
 attnamelist = h:NAME attrib t:(COMMA @NAME attrib)* { return [h, ...t] }
 attrib      = (LT NAME GT)?
 

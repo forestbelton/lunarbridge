@@ -16,6 +16,14 @@ export class LuaEnvironment {
     }
     return value;
   }
+
+  set(key: string, value: LuaValue) {
+    if (typeof this.parent !== "undefined" && this.parent.get(key) !== null) {
+      this.parent.set(key, value);
+    } else {
+      this.values[key] = value;
+    }
+  }
 }
 
 export type LuaFunction = (...args: LuaValue[]) => LuaValue;

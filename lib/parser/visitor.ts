@@ -67,7 +67,7 @@ export abstract class ExprVisitor<A> {
     } else if (expr instanceof CallExpr) {
       return this.call(
         this.visit(expr.target),
-        expr.args.map(this.visit),
+        expr.args.map((arg) => this.visit(arg)),
         expr.method
       );
     } else {

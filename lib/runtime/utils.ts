@@ -24,3 +24,7 @@ export const getTypeName = (value: LuaValue): string => {
   }
   throw new LuaError("tried to get name of unknown type");
 };
+
+export const isTruthy = (value: LuaValue) => value !== null && value !== false;
+
+export const isFalsy = (value: LuaValue) => !isTruthy(value);
