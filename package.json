@@ -1,15 +1,20 @@
 {
   "name": "lunarbridge",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Lua 5.4 runtime for JavaScript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "bash -c ./build.sh",
     "test": "mocha"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "lua",
+    "compiler",
+    "interpreter"
+  ],
+  "author": "Forest Belton <forest@homolo.gy>",
   "license": "ISC",
   "devDependencies": {
     "chai": "^5.1.0",

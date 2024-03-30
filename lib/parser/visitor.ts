@@ -70,9 +70,8 @@ export abstract class ExprVisitor<A> {
         expr.args.map((arg) => this.visit(arg)),
         expr.method
       );
-    } else {
-      throw new Error("unsupported expr: " + expr);
     }
+    throw new Error("unsupported expr: " + expr);
   }
 }
 
@@ -115,8 +114,7 @@ export abstract class StatementVisitor<A> {
       this.declare(stmt);
     } else if (stmt instanceof CallStatement) {
       this.call(stmt);
-    } else {
-      throw new Error("unsupported stmt: " + stmt);
     }
+    throw new Error("unsupported stmt: " + stmt);
   }
 }

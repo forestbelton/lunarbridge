@@ -147,7 +147,7 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
 
   func(expr: FunctionExpr): LuaValue {
     return (...args: LuaValue[]) => {
-      const params = {};
+      const params: Record<string, LuaValue> = {};
       expr.params.forEach((param, i) => {
         params[param] = i < args.length ? args[i] : null;
       });

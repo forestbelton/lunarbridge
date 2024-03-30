@@ -1,4 +1,4 @@
-import { LuaRuntime } from "./build/runtime/runtime.js";
+import { LuaRuntime } from "./build";
 
 const runtime = new LuaRuntime();
 runtime.executeScript(`

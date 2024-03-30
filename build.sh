@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-rm -rf build
+BUILD_DIR=./dist
+
+rm -rf "$BUILD_DIR"
 tsc
-rsync -qavum --include='*.js' --include='*/' --exclude='*' ./lib/ ./build
-peggy --allowed-start-rules '*' -o build/parser/parser.js --format es lib/parser/lua.peggy
+rsync -qavum --include='*.js' --include '*.d.ts' --include='*/' --exclude='*' ./lib/ "$BUILD_DIR"
+peggy --allowed-start-rules '*' -o "$BUILD_DIR/parser/parser.js" --format es lib/parser/lua.peggy

@@ -1,4 +1,3 @@
-import { Expr } from "../parser/ast.js";
 import { parse } from "../parser/parser.js";
 import { InterpretExprVisitor, evalBlock } from "./eval.js";
 import { LuaEnvironment, LuaValue } from "./value.js";
@@ -6,8 +5,8 @@ import { LuaEnvironment, LuaValue } from "./value.js";
 export class LuaRuntime {
   globals: LuaEnvironment;
 
-  constructor(globals?: LuaEnvironment) {
-    this.globals = globals || new LuaEnvironment();
+  constructor(globals?: Record<string, LuaValue>) {
+    this.globals = new LuaEnvironment(undefined, globals);
   }
 
   execute(rawExpr: string): LuaValue {
