@@ -17,6 +17,7 @@ import {
   IfElseStatement,
   IndexExpr,
   LabelStatement,
+  LazyBinaryOperator,
   RepeatStatement,
   Stmt,
   TableExpr,
@@ -24,11 +25,13 @@ import {
   UnaryOpExpr,
   UnaryOperator,
   WhileStatement,
+  isBinopLazy,
 } from "./ast.js";
 
 export abstract class ExprVisitor<A> {
   abstract unaryOp(op: UnaryOperator, expr: A): A;
   abstract binOp(op: BinaryOperator, left: A, right: A): A;
+  abstract binOpLazy(op: LazyBinaryOperator, left: A, rightLazy: () => A): A;
   abstract constant(expr: ConstantExpr): A;
   abstract func(expr: FunctionExpr): A;
   abstract identifier(expr: Identifier): A;
@@ -40,7 +43,10 @@ export abstract class ExprVisitor<A> {
     if (expr instanceof UnaryOpExpr) {
       return this.unaryOp(expr.op, this.visit(expr.expr));
     } else if (expr instanceof BinOpExpr) {
-      return this.binOp(expr.op, this.visit(expr.left), this.visit(expr.right));
+      const lhs = this.visit(expr.left);
+      return isBinopLazy(expr.op)
+        ? this.binOpLazy(expr.op, lhs, () => this.visit(expr.right))
+        : this.binOp(expr.op, lhs, this.visit(expr.right));
     } else if (expr instanceof ConstantExpr) {
       return this.constant(expr);
     } else if (expr instanceof FunctionExpr) {

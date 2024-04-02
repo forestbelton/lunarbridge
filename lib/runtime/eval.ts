@@ -8,6 +8,7 @@ import {
   DeclareStatement,
   DoStatement,
   Ellipsis,
+  Expr,
   ForInStatement,
   ForRangeStatement,
   FunctionExpr,
@@ -15,6 +16,7 @@ import {
   Identifier,
   IfElseStatement,
   LabelStatement,
+  LazyBinaryOperator,
   RepeatStatement,
   TableExpr,
   UnaryOperator,
@@ -33,51 +35,49 @@ import {
 } from "./utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
-const BIN_OPS: Record<BinaryOperator, (x: LuaValue, y: LuaValue) => LuaValue> =
-  {
-    // @ts-ignore
-    "+": (x, y) => x + y,
-    // @ts-ignore
-    "-": (x, y) => x - y,
-    // @ts-ignore
-    "*": (x, y) => x * y,
-    // @ts-ignore
-    "/": (x, y) => x / y,
-    // @ts-ignore
-    "//": (x, y) => Math.floor(x / y),
-    // @ts-ignore
-    "%": (x, y) => x % y,
-    // @ts-ignore
-    "&": (x, y) => x & y,
-    // @ts-ignore
-    "|": (x, y) => x | y,
-    // @ts-ignore
-    "~": (x, y) => x ^ y,
-    // @ts-ignore
-    "<<": (x, y) => x << y,
-    // @ts-ignore
-    ">>": (x, y) => x >> y,
-    // @ts-ignore
-    "..": (x, y) => x + y,
-    // @ts-ignore
-    "<": (x, y) => x < y,
-    // @ts-ignore
-    "<=": (x, y) => x <= y,
-    // @ts-ignore
-    ">": (x, y) => x > y,
-    // @ts-ignore
-    ">=": (x, y) => x >= y,
-    // @ts-ignore
-    "==": (x, y) => x === y,
-    // @ts-ignore
-    "~=": (x, y) => x !== y,
-    // @ts-ignore
-    and: (x, y) => x && y,
-    // @ts-ignore
-    or: (x, y) => x || y,
-    // @ts-ignore
-    "^": (x, y) => Math.pow(x, y),
-  };
+const BIN_OPS: Record<
+  Exclude<BinaryOperator, LazyBinaryOperator>,
+  (x: LuaValue, y: LuaValue) => LuaValue
+> = {
+  // @ts-ignore
+  "+": (x, y) => x + y,
+  // @ts-ignore
+  "-": (x, y) => x - y,
+  // @ts-ignore
+  "*": (x, y) => x * y,
+  // @ts-ignore
+  "/": (x, y) => x / y,
+  // @ts-ignore
+  "//": (x, y) => Math.floor(x / y),
+  // @ts-ignore
+  "%": (x, y) => x % y,
+  // @ts-ignore
+  "&": (x, y) => x & y,
+  // @ts-ignore
+  "|": (x, y) => x | y,
+  // @ts-ignore
+  "~": (x, y) => x ^ y,
+  // @ts-ignore
+  "<<": (x, y) => x << y,
+  // @ts-ignore
+  ">>": (x, y) => x >> y,
+  // @ts-ignore
+  "..": (x, y) => x + y,
+  // @ts-ignore
+  "<": (x, y) => x < y,
+  // @ts-ignore
+  "<=": (x, y) => x <= y,
+  // @ts-ignore
+  ">": (x, y) => x > y,
+  // @ts-ignore
+  ">=": (x, y) => x >= y,
+  // @ts-ignore
+  "==": (x, y) => x === y,
+  // @ts-ignore
+  "~=": (x, y) => x !== y,
+  // @ts-ignore
+  "^": (x, y) => Math.pow(x, y),
+};
 
 export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
   const stmtVisitor = new InterpretStatementVisitor(env);
@@ -142,8 +142,25 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
     }
   }
 
-  binOp(op: BinaryOperator, left: LuaValue, right: LuaValue): LuaValue {
+  binOp(
+    op: Exclude<BinaryOperator, LazyBinaryOperator>,
+    left: LuaValue,
+    right: LuaValue
+  ): LuaValue {
     return BIN_OPS[op](left, right);
+  }
+
+  binOpLazy(
+    op: LazyBinaryOperator,
+    left: LuaValue,
+    rightLazy: () => LuaValue
+  ): LuaValue {
+    switch (op) {
+      case "and":
+        return isTruthy(left) ? isTruthy(rightLazy()) : false;
+      case "or":
+        return isTruthy(left) ? true : isTruthy(rightLazy());
+    }
   }
 
   constant(expr: ConstantExpr): LuaValue {

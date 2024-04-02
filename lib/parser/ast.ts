@@ -198,8 +198,12 @@ export type BinaryOperator =
   | ">="
   | "=="
   | "~="
-  | "and"
-  | "or";
+  | LazyBinaryOperator;
+
+export type LazyBinaryOperator = "and" | "or";
+
+export const isBinopLazy = (op: BinaryOperator): op is LazyBinaryOperator =>
+  op === "and" || op === "or";
 
 export class BinOpExpr {
   op: BinaryOperator;
