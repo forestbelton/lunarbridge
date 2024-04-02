@@ -3,9 +3,11 @@ import { expect } from "chai";
 import { InterpretExprVisitor } from "../dist/runtime/eval.js";
 import { LuaEnvironment, LuaTable } from "../dist/runtime/value.js";
 import {
+  BinOpExpr,
   Block,
   ConstantExpr,
   FunctionExpr,
+  Identifier,
   TableExpr,
   UnaryOpExpr,
 } from "../dist/parser/ast.js";
@@ -23,6 +25,21 @@ describe("evaluation", () => {
       expect(visitor.visit(new ConstantExpr(123))).to.equal(123);
       expect(visitor.visit(new ConstantExpr(-456))).to.equal(-456);
       expect(visitor.visit(new ConstantExpr(0.5))).to.be.closeTo(0.5, 0.000001);
+    });
+
+    it("functions", () => {
+      const func = visitor.visit(
+        new FunctionExpr(
+          ["x"],
+          new Block(
+            [],
+            [new BinOpExpr("+", new Identifier("x"), new ConstantExpr(1))]
+          )
+        )
+      );
+
+      expect(func).to.be.a("function");
+      expect(func(123)).to.equal(124);
     });
 
     describe("unary operations", () => {
