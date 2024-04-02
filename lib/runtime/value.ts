@@ -39,10 +39,12 @@ export type LuaValue =
 export class LuaTable {
   nextID: number;
   items: Map<LuaValue, LuaValue>;
+  metatable: LuaTable | null;
 
   constructor(items?: LuaValue[] | Map<LuaValue, LuaValue>) {
     this.nextID = 1;
     this.items = new Map();
+    this.metatable = null;
 
     if (items instanceof Array) {
       this.nextID = items.length + 1;
@@ -69,5 +71,14 @@ export class LuaTable {
 
   size() {
     return this.items.size;
+  }
+
+  metamethod(name: string): LuaFunction | null {
+    if (this.metatable === null) {
+      return null;
+    }
+
+    const value = this.metatable.get(name);
+    return typeof value !== "function" ? null : value;
   }
 }

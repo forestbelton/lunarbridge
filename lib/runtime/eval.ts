@@ -24,7 +24,9 @@ import {
 import { ExprVisitor, StatementVisitor } from "../parser/visitor.js";
 import {
   LuaError,
+  LuaType,
   LuaTypeError,
+  getType,
   getTypeName,
   isFalsy,
   isTruthy,
@@ -110,27 +112,33 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
       case "~":
         if (typeof expr === "number") {
           return ~expr;
-        } else {
-          throw new LuaTypeError("perform bitwise operation on", expr);
+        } else if (expr instanceof LuaTable) {
+          const func = expr.metamethod("__bnot");
+          if (func !== null) {
+            return func(expr, expr);
+          }
         }
+        throw new LuaTypeError("perform bitwise operation on", expr);
       case "-":
         if (typeof expr === "number") {
-          return -expr;
-        } else {
-          throw new LuaTypeError("perform negation on", expr);
+          return ~expr;
+        } else if (expr instanceof LuaTable) {
+          const func = expr.metamethod("__unm");
+          if (func !== null) {
+            return func(expr, expr);
+          }
         }
+        throw new LuaTypeError("perform bitwise operation on", expr);
       case "not":
         return isFalsy(expr);
       case "#":
         if (typeof expr === "string") {
           return expr.length;
         } else if (expr instanceof LuaTable) {
-          return expr.size();
-        } else {
-          throw new LuaTypeError("get length of", expr);
+          const func = expr.metamethod("__len");
+          return func !== null ? func(expr, expr) : expr.size();
         }
-      default:
-        throw new LuaError(`unsupported unary operator ${op}`);
+        throw new LuaTypeError("get length of", expr);
     }
   }
 

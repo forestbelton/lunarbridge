@@ -8,22 +8,50 @@ export class LuaTypeError extends LuaError {
   }
 }
 
-export const getTypeName = (value: LuaValue): string => {
+export enum LuaType {
+  BOOLEAN,
+  FUNCTION,
+  NIL,
+  NUMBER,
+  STRING,
+  TABLE,
+}
+
+export const getType = (value: LuaValue): LuaType => {
+  let type: LuaType | undefined;
+
   if (typeof value === "string") {
-    return "string";
+    type = LuaType.STRING;
   } else if (typeof value === "number") {
-    return "number";
+    type = LuaType.NUMBER;
   } else if (typeof value === "boolean") {
-    return "boolean";
+    type = LuaType.BOOLEAN;
   } else if (typeof value === "function") {
-    return "function";
+    type = LuaType.FUNCTION;
   } else if (value === null) {
-    return "nil";
+    type = LuaType.NIL;
   } else if (value instanceof LuaTable) {
-    return "table";
+    type = LuaType.TABLE;
   }
-  throw new LuaError("tried to get name of unknown type");
+
+  if (typeof type === "undefined") {
+    throw new LuaError("tried to get name of unknown type");
+  }
+
+  return type;
 };
+
+const LUA_TYPE_NAMES: Record<LuaType, string> = {
+  [LuaType.BOOLEAN]: "boolean",
+  [LuaType.FUNCTION]: "function",
+  [LuaType.NIL]: "nil",
+  [LuaType.NUMBER]: "number",
+  [LuaType.STRING]: "string",
+  [LuaType.TABLE]: "table",
+};
+
+export const getTypeName = (value: LuaValue): string =>
+  LUA_TYPE_NAMES[getType(value)];
 
 export const isTruthy = (value: LuaValue) => value !== null && value !== false;
 
