@@ -35,22 +35,12 @@ import {
 } from "./utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
-const BIN_OPS: Record<
-  Exclude<BinaryOperator, LazyBinaryOperator>,
-  (x: LuaValue, y: LuaValue) => LuaValue
+const BIN_OPS: Partial<
+  Record<
+    Exclude<BinaryOperator, LazyBinaryOperator>,
+    (x: LuaValue, y: LuaValue) => LuaValue
+  >
 > = {
-  // @ts-ignore
-  "+": (x, y) => x + y,
-  // @ts-ignore
-  "-": (x, y) => x - y,
-  // @ts-ignore
-  "*": (x, y) => x * y,
-  // @ts-ignore
-  "/": (x, y) => x / y,
-  // @ts-ignore
-  "//": (x, y) => Math.floor(x / y),
-  // @ts-ignore
-  "%": (x, y) => x % y,
   // @ts-ignore
   "&": (x, y) => x & y,
   // @ts-ignore
@@ -75,8 +65,6 @@ const BIN_OPS: Record<
   "==": (x, y) => x === y,
   // @ts-ignore
   "~=": (x, y) => x !== y,
-  // @ts-ignore
-  "^": (x, y) => Math.pow(x, y),
 };
 
 export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
@@ -94,6 +82,36 @@ export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
     // TODO: Fix this, it's not really correct.
     value = new LuaTable(
       block.returnExprs.map((expr) => exprVisitor.visit(expr))
+    );
+  }
+  return value;
+};
+
+const arithOp = (
+  name: string,
+  metafield: string,
+  op: (x: number, y: number) => number,
+  left: LuaValue,
+  right: LuaValue
+): number => {
+  let value: number | undefined;
+  if (typeof left === "number" && typeof right === "number") {
+    value = op(left, right);
+  } else if (left instanceof LuaTable && left.metamethod(metafield) !== null) {
+    // @ts-ignore
+    value = left.metamethod(metafield)(left, right);
+  } else if (
+    right instanceof LuaTable &&
+    right.metamethod(metafield) !== null
+  ) {
+    // @ts-ignore
+    value = right.metamethod(metafield)(left, right);
+  }
+  if (typeof value === "undefined") {
+    throw new LuaError(
+      `attempt to ${name} a '${getTypeName(left)}' with a '${getTypeName(
+        right
+      )}'`
     );
   }
   return value;
@@ -147,7 +165,37 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
     left: LuaValue,
     right: LuaValue
   ): LuaValue {
-    return BIN_OPS[op](left, right);
+    switch (op) {
+      case "+":
+        return arithOp("add", "__add", (x, y) => x + y, left, right);
+      case "-":
+        return arithOp("subtract", "__sub", (x, y) => x - y, left, right);
+      case "*":
+        return arithOp("multiply", "__mul", (x, y) => x * y, left, right);
+      case "/":
+        return arithOp("divide", "__div", (x, y) => x / y, left, right);
+      case "%":
+        return arithOp("modulo", "__mod", (x, y) => x % y, left, right);
+      case "^":
+        return arithOp(
+          "exponentiate",
+          "__pow",
+          (x, y) => Math.pow(x, y),
+          left,
+          right
+        );
+      case "//":
+        return arithOp(
+          "floor divide",
+          "__idiv",
+          (x, y) => Math.floor(x / y),
+          left,
+          right
+        );
+      default:
+        // @ts-ignore
+        return BIN_OPS[op](left, right);
+    }
   }
 
   binOpLazy(

@@ -210,5 +210,28 @@ describe("evaluation", () => {
         });
       });
     });
+
+    describe("binary operations", () => {
+      describe("addition", () => {
+        it("number + number", () => {
+          expect(
+            visitor.visit(
+              new BinOpExpr("+", new ConstantExpr(1), new ConstantExpr(2))
+            )
+          ).to.equal(3);
+        });
+        it("number + metamethod", () => {
+          const tableRight = new LuaTable();
+          tableRight.metatable = new LuaTable(
+            new Map([["__add", (x, y) => y]])
+          );
+          expect(visitor.binOp("+", tableRight, 1)).to.equal(1);
+
+          const tableLeft = new LuaTable();
+          tableLeft.metatable = new LuaTable(new Map([["__add", (x, y) => x]]));
+          expect(visitor.binOp("+", 1, tableLeft)).to.equal(1);
+        });
+      });
+    });
   });
 });
