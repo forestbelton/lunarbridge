@@ -121,14 +121,14 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
         throw new LuaTypeError("perform bitwise operation on", expr);
       case "-":
         if (typeof expr === "number") {
-          return ~expr;
+          return -expr;
         } else if (expr instanceof LuaTable) {
           const func = expr.metamethod("__unm");
           if (func !== null) {
             return func(expr, expr);
           }
         }
-        throw new LuaTypeError("perform bitwise operation on", expr);
+        throw new LuaTypeError("perform negation on", expr);
       case "not":
         return isFalsy(expr);
       case "#":
