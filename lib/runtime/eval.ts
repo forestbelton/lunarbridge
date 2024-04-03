@@ -192,6 +192,19 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
           left,
           right
         );
+      // TODO: Behavior similar to the addition operation, except that Lua will
+      //       try a metamethod if any operand is neither an integer nor a float
+      //       coercible to an integer
+      case "&":
+        return arithOp("bitwise and", "__band", (x, y) => x & y, left, right);
+      case "|":
+        return arithOp("bitwise or", "__bor", (x, y) => x | y, left, right);
+      case "~":
+        return arithOp("bitwise xor", "__bxor", (x, y) => x ^ y, left, right);
+      case "<<":
+        return arithOp("left shift", "__shl", (x, y) => x << y, left, right);
+      case ">>":
+        return arithOp("right shift", "__shr", (x, y) => x >> y, left, right);
       default:
         // @ts-ignore
         return BIN_OPS[op](left, right);
