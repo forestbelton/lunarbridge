@@ -1,6 +1,6 @@
 {
   "name": "lunarbridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lua 5.4 runtime for JavaScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "interpreter"
   ],
   "author": "Forest Belton <forest@homolo.gy>",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "chai": "^5.1.0",
     "mocha": "^10.4.0",
