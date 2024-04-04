@@ -233,5 +233,76 @@ describe("evaluation", () => {
         });
       });
     });
+
+    describe("concatenation", () => {
+      it("number .. string", () => {
+        expect(
+          visitor.visit(
+            new BinOpExpr("..", new ConstantExpr("a"), new ConstantExpr(123))
+          )
+        ).to.equal("a123");
+      });
+
+      it("string .. number", () => {
+        expect(
+          visitor.visit(
+            new BinOpExpr("..", new ConstantExpr("123"), new ConstantExpr("a"))
+          )
+        ).to.equal("123a");
+      });
+
+      it("string .. string", () => {
+        expect(
+          visitor.visit(
+            new BinOpExpr(
+              "..",
+              new ConstantExpr("abc"),
+              new ConstantExpr("def")
+            )
+          )
+        ).to.equal("abcdef");
+      });
+
+      it("metamethod", () => {
+        const tableRight = new LuaTable();
+        tableRight.metatable = new LuaTable(
+          new Map([["__concat", (x, y) => "abc" + y.toString()]])
+        );
+        expect(visitor.binOp("..", tableRight, 123)).to.equal("abc123");
+
+        const tableLeft = new LuaTable();
+        tableLeft.metatable = new LuaTable(
+          new Map([["__concat", (x, y) => x.toString() + "abc"]])
+        );
+        expect(visitor.binOp("..", 123, tableLeft)).to.equal("123abc");
+      });
+
+      it("invalid value", () => {
+        expect(() =>
+          visitor.visit(
+            new BinOpExpr("..", new ConstantExpr(null), new ConstantExpr("a"))
+          )
+        ).to.throw("attempt to concatenate a nil value");
+        expect(() =>
+          visitor.visit(
+            new BinOpExpr("..", new TableExpr([]), new ConstantExpr("a"))
+          )
+        ).to.throw("attempt to concatenate a table value");
+        expect(() =>
+          visitor.visit(
+            new BinOpExpr("..", new ConstantExpr(false), new ConstantExpr("a"))
+          )
+        ).to.throw("attempt to concatenate a boolean value");
+        expect(() =>
+          visitor.visit(
+            new BinOpExpr(
+              "..",
+              new FunctionExpr([], new Block([], [])),
+              new ConstantExpr("a")
+            )
+          )
+        ).to.throw("attempt to concatenate a function value");
+      });
+    });
   });
 });

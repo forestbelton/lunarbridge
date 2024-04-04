@@ -28,6 +28,7 @@ import {
   LuaError,
   LuaType,
   LuaTypeError,
+  coerceString,
   getType,
   getTypeName,
   isFalsy,
@@ -222,12 +223,27 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
         return arithOp("left shift", "__shl", (x, y) => x << y, left, right);
       case ">>":
         return arithOp("right shift", "__shr", (x, y) => x >> y, left, right);
-      // TODO: Behavior similar to the addition operation, except that Lua will
-      //       try a metamethod if any operand is neither a string nor a number
-      //       (which is always coercible to a string).
       case "..":
-        // @ts-ignore
-        return left + right;
+        const leftString = coerceString(left);
+        const rightString = coerceString(right);
+        if (leftString !== null && rightString !== null) {
+          return leftString + rightString;
+        } else if (left instanceof LuaTable) {
+          const method = left.metamethod("__concat");
+          if (method !== null) {
+            return method(left, right);
+          }
+        } else if (right instanceof LuaTable) {
+          const method = right.metamethod("__concat");
+          if (method !== null) {
+            return method(left, right);
+          }
+        }
+        if (leftString === null) {
+          throw new LuaTypeError("concatenate", left);
+        } else {
+          throw new LuaTypeError("concatenate", right);
+        }
       case "<":
         return relOp("__lt", (x, y) => x < y, left, right);
       case "<=":

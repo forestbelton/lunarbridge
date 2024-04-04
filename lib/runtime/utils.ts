@@ -56,3 +56,13 @@ export const getTypeName = (value: LuaValue): string =>
 export const isTruthy = (value: LuaValue) => value !== null && value !== false;
 
 export const isFalsy = (value: LuaValue) => !isTruthy(value);
+
+export const coerceString = (value: LuaValue): string | null => {
+  let result: string | null = null;
+  if (typeof value === "string") {
+    result = value;
+  } else if (typeof value === "number") {
+    result = value.toString();
+  }
+  return result;
+};
