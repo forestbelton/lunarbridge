@@ -42,16 +42,6 @@ const BIN_OPS: Partial<
   >
 > = {
   // @ts-ignore
-  "&": (x, y) => x & y,
-  // @ts-ignore
-  "|": (x, y) => x | y,
-  // @ts-ignore
-  "~": (x, y) => x ^ y,
-  // @ts-ignore
-  "<<": (x, y) => x << y,
-  // @ts-ignore
-  ">>": (x, y) => x >> y,
-  // @ts-ignore
   "..": (x, y) => x + y,
   // @ts-ignore
   "<": (x, y) => x < y,
