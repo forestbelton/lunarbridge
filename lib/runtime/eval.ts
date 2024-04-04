@@ -35,28 +35,6 @@ import {
 } from "./utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "./value.js";
 
-const BIN_OPS: Partial<
-  Record<
-    Exclude<BinaryOperator, LazyBinaryOperator>,
-    (x: LuaValue, y: LuaValue) => LuaValue
-  >
-> = {
-  // @ts-ignore
-  "..": (x, y) => x + y,
-  // @ts-ignore
-  "<": (x, y) => x < y,
-  // @ts-ignore
-  "<=": (x, y) => x <= y,
-  // @ts-ignore
-  ">": (x, y) => x > y,
-  // @ts-ignore
-  ">=": (x, y) => x >= y,
-  // @ts-ignore
-  "==": (x, y) => x === y,
-  // @ts-ignore
-  "~=": (x, y) => x !== y,
-};
-
 export const evalBlock = (env: LuaEnvironment, block: Block): LuaValue => {
   const stmtVisitor = new InterpretStatementVisitor(env);
   const exprVisitor = new InterpretExprVisitor(env);
@@ -105,6 +83,55 @@ const arithOp = (
     );
   }
   return value;
+};
+
+const relOp = (
+  metafield: string,
+  op: (x: number | string, y: number | string) => boolean,
+  left: LuaValue,
+  right: LuaValue
+): boolean => {
+  let value: boolean | undefined;
+  if (typeof left === "number" && typeof right === "number") {
+    value = op(left, right);
+  } else if (typeof left === "string" && typeof right === "string") {
+    value = op(left, right);
+  } else if (left instanceof LuaTable && left.metamethod(metafield) !== null) {
+    // @ts-ignore
+    value = left.metamethod(metafield)(left, right);
+  } else if (
+    right instanceof LuaTable &&
+    right.metamethod(metafield) !== null
+  ) {
+    // @ts-ignore
+    value = right.metamethod(metafield)(left, right);
+  }
+  if (typeof value === "undefined") {
+    throw new LuaError(
+      `attempt to compare a '${getTypeName(left)}' with a '${getTypeName(
+        right
+      )}'`
+    );
+  }
+  return value;
+};
+
+const equals = (left: LuaValue, right: LuaValue): boolean => {
+  let isEqual = false;
+
+  if (left === right) {
+    isEqual = true;
+  } else if (left instanceof LuaTable && right instanceof LuaTable) {
+    const leftMethod = left.metamethod("__eq");
+    const rightMethod = right.metamethod("__eq");
+    if (leftMethod !== null) {
+      isEqual = isTruthy(leftMethod(left, right));
+    } else if (rightMethod !== null) {
+      isEqual = isTruthy(rightMethod(left, right));
+    }
+  }
+
+  return isEqual;
 };
 
 export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
@@ -184,7 +211,7 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
         );
       // TODO: Behavior similar to the addition operation, except that Lua will
       //       try a metamethod if any operand is neither an integer nor a float
-      //       coercible to an integer
+      //       coercible to an integer.
       case "&":
         return arithOp("bitwise and", "__band", (x, y) => x & y, left, right);
       case "|":
@@ -195,9 +222,24 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
         return arithOp("left shift", "__shl", (x, y) => x << y, left, right);
       case ">>":
         return arithOp("right shift", "__shr", (x, y) => x >> y, left, right);
-      default:
+      // TODO: Behavior similar to the addition operation, except that Lua will
+      //       try a metamethod if any operand is neither a string nor a number
+      //       (which is always coercible to a string).
+      case "..":
         // @ts-ignore
-        return BIN_OPS[op](left, right);
+        return left + right;
+      case "<":
+        return relOp("__lt", (x, y) => x < y, left, right);
+      case "<=":
+        return relOp("__le", (x, y) => x <= y, left, right);
+      case ">":
+        return relOp("__lt", (x, y) => x < y, right, left);
+      case ">=":
+        return relOp("__le", (x, y) => x <= y, right, left);
+      case "==":
+        return equals(left, right);
+      case "~=":
+        return !equals(left, right);
     }
   }
 

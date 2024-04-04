@@ -35,7 +35,7 @@ console.log(result);
 
 ## Not implemented (yet!!)
 
-- Metatables and metamethods
+- Some metamethods (`__index`, `__newindex`, `__call`)
 - Attributes (`<const>`, `<>`)
 - Coroutines
 - Goto
