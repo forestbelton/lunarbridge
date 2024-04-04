@@ -1,5 +1,6 @@
 import { parse } from "../parser/parser.js";
-import { InterpretExprVisitor, evalBlock } from "./eval.js";
+import { evalBlock } from "./eval/block.js";
+import { InterpretExprVisitor } from "./eval/expression.js";
 import { LuaEnvironment, LuaValue } from "./value.js";
 
 export class LuaRuntime {

@@ -26,7 +26,7 @@ import {
   UnaryOperator,
   WhileStatement,
   isBinopLazy,
-} from "./ast.js";
+} from "../../parser/ast.js";
 
 export abstract class ExprVisitor<A> {
   abstract unaryOp(op: UnaryOperator, expr: A): A;

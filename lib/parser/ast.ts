@@ -202,6 +202,8 @@ export type BinaryOperator =
 
 export type LazyBinaryOperator = "and" | "or";
 
+export type StrictBinaryOperator = Exclude<BinaryOperator, LazyBinaryOperator>;
+
 export const isBinopLazy = (op: BinaryOperator): op is LazyBinaryOperator =>
   op === "and" || op === "or";
 
