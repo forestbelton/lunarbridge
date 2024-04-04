@@ -331,7 +331,18 @@ export class InterpretStatementVisitor extends StatementVisitor<void> {
   }
 
   ifelse(stmt: IfElseStatement): void {
-    throw new Error("Method not implemented.");
+    let done = false;
+    for (let i = 0; i < stmt.ifBodies.length; ++i) {
+      const [cond, block] = stmt.ifBodies[i];
+      if (isTruthy(this.exprVisitor.visit(cond))) {
+        evalBlock(new LuaEnvironment(this.env), block);
+        done = true;
+        break;
+      }
+    }
+    if (!done && stmt.elseBody !== null) {
+      evalBlock(new LuaEnvironment(this.env), stmt.elseBody);
+    }
   }
 
   forrange(stmt: ForRangeStatement): void {

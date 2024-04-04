@@ -82,9 +82,9 @@ export class RepeatStatement {
 
 export class IfElseStatement {
   ifBodies: [Expr, Block][];
-  elseBody: [Expr, Block] | null;
+  elseBody: Block | null;
 
-  constructor(ifBodies: [Expr, Block][], elseBody: [Expr, Block] | null) {
+  constructor(ifBodies: [Expr, Block][], elseBody: Block | null) {
     this.ifBodies = ifBodies;
     this.elseBody = elseBody;
   }
