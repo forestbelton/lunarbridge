@@ -98,6 +98,37 @@ const arithOp =
     );
   };
 
+const bitOp =
+  (metafield: string, op: (x: number, y: number) => number): BinaryOperation =>
+  (left: LuaValue, right: LuaValue): LuaValue => {
+    if (Number.isInteger(left) && Number.isInteger(right)) {
+      // @ts-ignore
+      return op(left, right);
+    }
+
+    if (left instanceof LuaTable) {
+      const method = left.metamethod(metafield);
+      if (method !== null) {
+        return method(left, right);
+      }
+    }
+
+    if (right instanceof LuaTable) {
+      const method = right.metamethod(metafield);
+      if (method !== null) {
+        return method(left, right);
+      }
+    }
+
+    if (typeof left !== "number") {
+      throw new LuaTypeError("perform bitwise operation on", left);
+    } else if (typeof right !== "number") {
+      throw new LuaTypeError("perform bitwise operation on", right);
+    } else {
+      throw new LuaError("number has no integer representation");
+    }
+  };
+
 const relOp =
   (
     metafield: string,
@@ -192,14 +223,11 @@ export const BINARY_OPERATIONS: Record<
   "^": arithOp("exponentiate", "__pow", (x, y) => Math.pow(x, y)),
   "//": arithOp("floor divide", "__idiv", (x, y) => Math.floor(x / y)),
 
-  // TODO: Behavior similar to the addition operation, except that Lua will
-  //       try a metamethod if any operand is neither an integer nor a float
-  //       coercible to an integer.
-  "&": arithOp("bitwise and", "__band", (x, y) => x & y),
-  "|": arithOp("bitwise or", "__bor", (x, y) => x | y),
-  "~": arithOp("bitwise xor", "__bxor", (x, y) => x ^ y),
-  "<<": arithOp("left shift", "__shl", (x, y) => x << y),
-  ">>": arithOp("right shift", "__shr", (x, y) => x >> y),
+  "&": bitOp("__band", (x, y) => x & y),
+  "|": bitOp("__bor", (x, y) => x | y),
+  "~": bitOp("__bxor", (x, y) => x ^ y),
+  "<<": bitOp("__shl", (x, y) => x << y),
+  ">>": bitOp("__shr", (x, y) => x >> y),
 
   "..": concatenate,
 
