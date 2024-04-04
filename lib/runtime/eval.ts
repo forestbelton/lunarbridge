@@ -256,12 +256,21 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
   }
 
   call(target: LuaValue, args: LuaValue[], method?: string): LuaValue {
-    if (typeof target !== "function") {
-      throw new LuaTypeError("call", target);
+    // TODO: Implement __call metamethod
+    if (typeof target === "function") {
+      return target(...args);
     } else if (typeof method !== "undefined") {
-      throw new LuaError("method calls not implemented");
+      if (getType(target) !== LuaType.TABLE) {
+        throw new LuaError(`attempt to index a ${getTypeName(target)} value`);
+      }
+      // @ts-ignore
+      const methodFunc = target.get(method);
+      if (typeof methodFunc !== "function") {
+        throw new LuaTypeError("call", methodFunc);
+      }
+      return methodFunc(target, ...args);
     }
-    return target(...args);
+    throw new LuaTypeError("call", target);
   }
 }
 
