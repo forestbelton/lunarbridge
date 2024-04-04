@@ -1,5 +1,7 @@
 # lunarbridge
 
+[![build status](https://github.com/forestbelton/lunarbridge/actions/workflows/build.yaml/badge.svg)](https://github.com/forestbelton/lunarbridge/actions/workflows/build.yaml) [![npm](https://img.shields.io/npm/v/lunarbridge?logo=npm)](https://www.npmjs.com/package/lunarbridge)
+
 Lua 5.4 runtime for JavaScript
 
 ## Install
