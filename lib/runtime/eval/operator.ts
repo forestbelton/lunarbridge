@@ -101,8 +101,12 @@ const arithOp =
 const bitOp =
   (metafield: string, op: (x: number, y: number) => number): BinaryOperation =>
   (left: LuaValue, right: LuaValue): LuaValue => {
-    if (Number.isInteger(left) && Number.isInteger(right)) {
-      // @ts-ignore
+    if (
+      typeof left === "number" &&
+      Number.isInteger(left) &&
+      typeof right === "number" &&
+      Number.isInteger(right)
+    ) {
       return op(left, right);
     }
 

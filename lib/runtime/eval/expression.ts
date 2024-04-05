@@ -9,14 +9,7 @@ import {
   UnaryOperator,
 } from "../../parser/ast.js";
 import { ExprVisitor } from "./visitor.js";
-import {
-  LuaError,
-  LuaType,
-  LuaTypeError,
-  getType,
-  getTypeName,
-  isTruthy,
-} from "../utils.js";
+import { LuaError, LuaTypeError, getTypeName, isTruthy } from "../utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "../value.js";
 import { evalBlock } from "./block.js";
 import { BINARY_OPERATIONS, UNARY_OPERATIONS } from "./operator.js";
@@ -97,10 +90,9 @@ export class InterpretExprVisitor extends ExprVisitor<LuaValue> {
     if (typeof target === "function") {
       return target(...args);
     } else if (typeof method !== "undefined") {
-      if (getType(target) !== LuaType.TABLE) {
+      if (!(target instanceof LuaTable)) {
         throw new LuaError(`attempt to index a ${getTypeName(target)} value`);
       }
-      // @ts-ignore
       const methodFunc = target.get(method);
       if (typeof methodFunc !== "function") {
         throw new LuaTypeError("call", methodFunc);
