@@ -59,10 +59,16 @@ export class LuaFunctionContext {
   }
 
   R(r: R): LuaValue {
+    if (r.index >= this.registers.length) {
+      throw new Error();
+    }
     return this.registers[r.index];
   }
 
   K(k: K): LuaValue {
+    if (k.index >= this.func.constants.length) {
+      throw new Error();
+    }
     return this.func.constants[k.index];
   }
 

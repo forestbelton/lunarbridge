@@ -191,5 +191,29 @@ export const step = (ctx: LuaFunctionContext) => {
         throw new Error();
       }
       break;
+
+    case Opcode.TEST:
+      if (!!ctx.R(insn.src) === insn.value) {
+        ctx.instructionPointer++;
+      }
+      break;
+
+    case Opcode.TESTSET:
+      if (!!ctx.R(insn.src) !== insn.value) {
+        ctx.registers[insn.dst.index] = ctx.R(insn.src);
+      } else {
+        ctx.instructionPointer++;
+      }
+      break;
+
+    case Opcode.CALL:
+    case Opcode.TAILCALL:
+    case Opcode.RETURN:
+    case Opcode.FORLOOP:
+    case Opcode.FORPREP:
+    case Opcode.TFORLOOP:
+    case Opcode.CLOSE:
+    case Opcode.CLOSURE:
+      throw new Error();
   }
 };

@@ -49,13 +49,22 @@ type Operand<T extends OperandType> = {
   index: number;
 };
 
+const operand =
+  <Type extends OperandType>(type: Type): ((index: number) => Operand<Type>) =>
+  (index: number) => {
+    if (index < 0) {
+      throw new Error();
+    }
+    return { type, index };
+  };
+
 export type R = Operand<OperandType.R>;
 
-export const R = (index: number): R => ({ type: OperandType.R, index });
+export const R = operand(OperandType.R);
 
 export type K = Operand<OperandType.K>;
 
-export const K = (index: number): K => ({ type: OperandType.K, index });
+export const K = operand(OperandType.K);
 
 export type RK = R | K;
 
