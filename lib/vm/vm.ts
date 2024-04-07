@@ -1,4 +1,5 @@
-import { LuaFunctionContext, LuaValue } from "./func.js";
+import { LuaFunctionContext } from "./func.js";
+import { LuaValue } from "./util.js";
 
 export class LuaVM {
   globals: Record<string, LuaValue>;
