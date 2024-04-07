@@ -19,6 +19,18 @@ export const toNumber = (x: LuaValue): number | null => {
   return value;
 };
 
+export const coerceString = (x: LuaValue): string | null => {
+  let value: string | null = null;
+
+  if (typeof x === "number") {
+    value = x.toString();
+  } else if (typeof x === "string") {
+    value = x;
+  }
+
+  return value;
+};
+
 const EMPTY_TABLE = new LuaTable();
 
 export const metatable = (x: LuaValue): LuaTable => {

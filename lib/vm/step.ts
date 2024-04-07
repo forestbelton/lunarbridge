@@ -1,7 +1,7 @@
 import { LuaFunctionContext } from "./func.js";
-import { Opcode } from "./insn.js";
+import { Opcode, R } from "./insn.js";
 import { LuaTable } from "./table.js";
-import { LuaValue, isTable, toNumber } from "./util.js";
+import { LuaValue, coerceString, isTable, toNumber } from "./util.js";
 
 export const step = (ctx: LuaFunctionContext) => {
   let key: LuaValue = null;
@@ -86,11 +86,108 @@ export const step = (ctx: LuaFunctionContext) => {
       break;
 
     case Opcode.ADD:
-      const lhs = toNumber(ctx.RK(insn.lhs));
-      const rhs = toNumber(ctx.RK(insn.rhs));
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
       if (lhs !== null && rhs !== null) {
         ctx.registers[insn.dst.index] = lhs + rhs;
       } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.SUB:
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
+      if (lhs !== null && rhs !== null) {
+        ctx.registers[insn.dst.index] = lhs - rhs;
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.MUL:
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
+      if (lhs !== null && rhs !== null) {
+        ctx.registers[insn.dst.index] = lhs * rhs;
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.DIV:
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
+      if (lhs !== null && rhs !== null) {
+        ctx.registers[insn.dst.index] = lhs / rhs;
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.MOD:
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
+      if (lhs !== null && rhs !== null) {
+        ctx.registers[insn.dst.index] = lhs % rhs;
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.POW:
+      lhs = toNumber(ctx.RK(insn.lhs));
+      rhs = toNumber(ctx.RK(insn.rhs));
+      if (lhs !== null && rhs !== null) {
+        ctx.registers[insn.dst.index] = Math.pow(lhs, rhs);
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.UNM:
+      lhs = toNumber(ctx.R(insn.src));
+      if (lhs !== null) {
+        ctx.registers[insn.dst.index] = -lhs;
+      } else {
+        throw new Error();
+      }
+      break;
+
+    case Opcode.NOT:
+      ctx.registers[insn.dst.index] = !ctx.R(insn.src);
+      break;
+
+    case Opcode.LEN:
+      key = ctx.R(insn.src);
+      if (typeof key === "string") {
+        value = key.length;
+      } else if (isTable(key)) {
+        value = key.size();
+      } else {
+        throw new Error();
+      }
+      ctx.registers[insn.dst.index] = value;
+      break;
+
+    case Opcode.CONCAT:
+      const list: string[] = [];
+      for (let i = insn.start.index; i < insn.end.index; ++i) {
+        value = coerceString(ctx.R(R(i)));
+        if (value === null) {
+          throw new Error();
+        }
+        list.push(value);
+      }
+      ctx.registers[insn.dst.index] = list.join("");
+      break;
+
+    case Opcode.JMP:
+      ctx.instructionPointer += insn.offset;
+      if (
+        ctx.instructionPointer < 0 ||
+        ctx.instructionPointer > ctx.func.instructions.length
+      ) {
         throw new Error();
       }
       break;

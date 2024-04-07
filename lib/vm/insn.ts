@@ -63,142 +63,52 @@ export const isR = (rk: RK): rk is R => rk.type === OperandType.R;
 
 export const isK = (rk: RK): rk is K => rk.type === OperandType.K;
 
-export type Insn_MOVE = {
-  type: Opcode.MOVE;
-  dst: R;
-  src: R;
-};
+type InsnT<Type extends Opcode, Data> = { type: Type } & Data;
 
-export type Insn_LOADK = {
-  type: Opcode.LOADK;
-  dst: R;
-  src: K;
-};
+type InsnUnaryOp<Type extends Opcode> = InsnT<Type, { dst: R; src: R }>;
 
-export type Insn_LOADBOOL = {
-  type: Opcode.LOADBOOL;
-  dst: R;
-  value: boolean;
-  cond: boolean;
-};
+type InsnBinOp<Type extends Opcode> = InsnT<Type, { dst: R; lhs: RK; rhs: RK }>;
 
-export type Insn_LOADNIL = {
-  type: Opcode.LOADNIL;
-  start: R;
-  end: R;
-};
-
-export type Insn_GETGLOBAL = {
-  type: Opcode.GETGLOBAL;
-  dst: R;
-  key: K;
-};
-
-export type Insn_GETUPVAL = {
-  type: Opcode.GETUPVAL;
-  dst: R;
-  index: number;
-};
-
-export type Insn_GETTABLE = {
-  type: Opcode.GETTABLE;
-  dst: R;
-  src: R;
-  key: RK;
-};
-
-export type Insn_SETTABLE = {
-  type: Opcode.SETTABLE;
-  table: R;
-  key: RK;
-  value: RK;
-};
-
-export type Insn_SETGLOBAL = {
-  type: Opcode.SETGLOBAL;
-  table: R;
-  key: K;
-  value: R;
-};
-
-export type Insn_SETUPVAL = {
-  type: Opcode.SETUPVAL;
-  index: number;
-  value: R;
-};
-
-export type Insn_NEWTABLE = {
-  type: Opcode.NEWTABLE;
-  dst: R;
-};
-
-export type Insn_SELF = {
-  type: Opcode.SELF;
-  dst: R;
-  table: R;
-  field: RK;
-};
-
-type Insn_BINOP<Type extends Opcode> = {
-  type: Type;
-  dst: R;
-  lhs: RK;
-  rhs: RK;
-};
-
-type Insn_UNARYOP<Type extends Opcode> = {
-  type: Type;
-  dst: R;
-  src: R;
-};
-
-type Insn_RELOP<Type extends Opcode> = {
-  type: Type;
-  cond: boolean;
-  lhs: RK;
-  rhs: RK;
-};
+type InsnRelOp<Type extends Opcode> = InsnT<
+  Type,
+  { cond: boolean; lhs: RK; rhs: RK }
+>;
 
 export type Insn =
-  | Insn_MOVE
-  | Insn_LOADK
-  | Insn_LOADBOOL
-  | Insn_LOADNIL
-  | Insn_GETGLOBAL
-  | Insn_GETUPVAL
-  | Insn_GETTABLE
-  | Insn_SETTABLE
-  | Insn_SETGLOBAL
-  | Insn_SETUPVAL
-  | Insn_NEWTABLE
-  | Insn_SELF
-  | Insn_BINOP<Opcode.ADD>
-  | Insn_BINOP<Opcode.SUB>
-  | Insn_BINOP<Opcode.MUL>
-  | Insn_BINOP<Opcode.DIV>
-  | Insn_BINOP<Opcode.MOD>
-  | Insn_BINOP<Opcode.POW>
-  | Insn_UNARYOP<Opcode.UNM>
-  | Insn_UNARYOP<Opcode.NOT>
-  | Insn_UNARYOP<Opcode.LEN>
-  | Insn_RELOP<Opcode.EQ>
-  | Insn_RELOP<Opcode.LT>
-  | Insn_RELOP<Opcode.LE>;
-
-/*export type Insn =
-  | [Opcode.CONCAT, R, R, R]
-  | [Opcode.JMP, number]
-  | [Opcode.CALL, R, R, R]
-  | [Opcode.RETURN, R, R]
-  | [Opcode.TAILCALL, R, R]
-  | [Opcode.VARARG, R, R]
-  | [Opcode.TEST, R, boolean]
-  | [Opcode.TESTSET, R, R, boolean]
-  | [Opcode.FORPREP, R, number]
-  | [Opcode.FORLOOP, R, number]
-  | [Opcode.TFORLOOP, R, number]
-  | [Opcode.NEWTABLE, R]
-  | [Opcode.SETLIST, R, number, number]
-  | [Opcode.CLOSE, R, number]
-  | [Opcode.CLOSURE, R];
-*/
+  | InsnT<Opcode.MOVE, { dst: R; src: R }>
+  | InsnT<Opcode.LOADK, { dst: R; src: K }>
+  | InsnT<Opcode.LOADBOOL, { dst: R; value: boolean; cond: boolean }>
+  | InsnT<Opcode.LOADNIL, { start: R; end: R }>
+  | InsnT<Opcode.GETUPVAL, { dst: R; index: number }>
+  | InsnT<Opcode.GETGLOBAL, { dst: R; key: K }>
+  | InsnT<Opcode.GETTABLE, { dst: R; src: R; key: RK }>
+  | InsnT<Opcode.SETGLOBAL, { table: R; key: K; value: R }>
+  | InsnT<Opcode.SETUPVAL, { index: number; value: R }>
+  | InsnT<Opcode.SETTABLE, { table: R; key: RK; value: RK }>
+  | InsnT<Opcode.NEWTABLE, { dst: R }>
+  | InsnT<Opcode.SELF, { dst: R; table: R; field: RK }>
+  | InsnBinOp<Opcode.ADD>
+  | InsnBinOp<Opcode.SUB>
+  | InsnBinOp<Opcode.MUL>
+  | InsnBinOp<Opcode.DIV>
+  | InsnBinOp<Opcode.MOD>
+  | InsnBinOp<Opcode.POW>
+  | InsnUnaryOp<Opcode.UNM>
+  | InsnUnaryOp<Opcode.NOT>
+  | InsnUnaryOp<Opcode.LEN>
+  | InsnT<Opcode.CONCAT, { dst: R; start: R; end: R }>
+  | InsnT<Opcode.JMP, { offset: number }>
+  | InsnRelOp<Opcode.EQ>
+  | InsnRelOp<Opcode.LT>
+  | InsnRelOp<Opcode.LE>
+  | InsnT<Opcode.TEST, { src: R; value: boolean }>
+  | InsnT<Opcode.TESTSET, { dst: R; src: R; value: boolean }>
+  | InsnT<Opcode.CALL, { func: R; arity: number; retvals: R }>
+  | InsnT<Opcode.TAILCALL, { func: R; arity: number }>
+  | InsnT<Opcode.RETURN, { start: R; retvals: R }>
+  | InsnT<Opcode.FORLOOP, { start: R; startoffset: R }>
+  | InsnT<Opcode.FORPREP, { start: R; endoffset: R }>
+  | InsnT<Opcode.TFORLOOP, { start: R; numvars: number }>
+  | InsnT<Opcode.SETLIST, { table: R; length: number }>
+  | InsnT<Opcode.CLOSE, { index: number }>
+  | InsnT<Opcode.CLOSURE, { dst: R; index: number }>;
