@@ -115,8 +115,8 @@ export type Insn =
   | InsnT<Opcode.CALL, { func: R; arity: number; retvals: R }>
   | InsnT<Opcode.TAILCALL, { func: R; arity: number }>
   | InsnT<Opcode.RETURN, { start: R; retvals: R }>
-  | InsnT<Opcode.FORLOOP, { start: R; startoffset: R }>
-  | InsnT<Opcode.FORPREP, { start: R; endoffset: R }>
+  | InsnT<Opcode.FORLOOP, { start: R; startoffset: number }>
+  | InsnT<Opcode.FORPREP, { start: R; endoffset: number }>
   | InsnT<Opcode.TFORLOOP, { start: R; numvars: number }>
   | InsnT<Opcode.SETLIST, { table: R; length: number }>
   | InsnT<Opcode.CLOSE, { index: number }>

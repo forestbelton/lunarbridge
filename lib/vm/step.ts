@@ -209,9 +209,36 @@ export const step = (ctx: LuaFunctionContext) => {
     case Opcode.CALL:
     case Opcode.TAILCALL:
     case Opcode.RETURN:
-    case Opcode.FORLOOP:
+      throw new Error();
+
     case Opcode.FORPREP:
+      lhs = toNumber(ctx.R(insn.start));
+      rhs = toNumber(ctx.registers[insn.start.index + 2]);
+      if (lhs === null || rhs === null) {
+        throw new Error();
+      }
+      ctx.registers[insn.start.index] = lhs - rhs;
+      ctx.instructionPointer += insn.endoffset;
+      break;
+
+    case Opcode.FORLOOP:
+      let current = toNumber(ctx.registers[insn.start.index]);
+      const end = toNumber(ctx.registers[insn.start.index + 1]);
+      const step = toNumber(ctx.registers[insn.start.index + 2]);
+      if (current === null || end === null || step === null) {
+        throw new Error();
+      }
+      current += step;
+      ctx.registers[insn.start.index] = current;
+      if ((step >= 0 && current < end) || (step < 0 && current > end)) {
+        ctx.instructionPointer += insn.startoffset;
+        ctx.registers[insn.start.index + 3] = current;
+      }
+      break;
+
     case Opcode.TFORLOOP:
+      throw new Error();
+
     case Opcode.CLOSE:
     case Opcode.CLOSURE:
       throw new Error();
