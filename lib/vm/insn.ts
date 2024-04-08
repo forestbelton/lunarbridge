@@ -94,12 +94,12 @@ export type BaseInsn<R> =
   | InsnT<Opcode.LOADNIL, { start: R; end: R }>
   | InsnT<Opcode.GETUPVAL, { dst: R; index: number }>
   | InsnT<Opcode.GETGLOBAL, { dst: R; key: K }>
-  | InsnT<Opcode.GETTABLE, { dst: R; src: R; key: RK }>
+  | InsnT<Opcode.GETTABLE, { dst: R; src: R; key: R | K }>
   | InsnT<Opcode.SETGLOBAL, { table: R; key: K; value: R }>
   | InsnT<Opcode.SETUPVAL, { index: number; value: R }>
-  | InsnT<Opcode.SETTABLE, { table: R; key: RK; value: RK }>
+  | InsnT<Opcode.SETTABLE, { table: R; key: R | K; value: R | K }>
   | InsnT<Opcode.NEWTABLE, { dst: R }>
-  | InsnT<Opcode.SELF, { dst: R; table: R; field: RK }>
+  | InsnT<Opcode.SELF, { dst: R; table: R; field: R | K }>
   | InsnBinOp<R, Opcode.ADD>
   | InsnBinOp<R, Opcode.SUB>
   | InsnBinOp<R, Opcode.MUL>
@@ -116,7 +116,7 @@ export type BaseInsn<R> =
   | InsnRelOp<R, Opcode.LE>
   | InsnT<Opcode.TEST, { src: R; value: boolean }>
   | InsnT<Opcode.TESTSET, { dst: R; src: R; value: boolean }>
-  | InsnT<Opcode.CALL, { func: R; arity: number; retvals: R }>
+  | InsnT<Opcode.CALL, { func: R; arity: number; retvals: number }>
   | InsnT<Opcode.TAILCALL, { func: R; arity: number }>
   | InsnT<Opcode.RETURN, { start: R; retvals: R }>
   | InsnT<Opcode.FORLOOP, { start: R; startoffset: number }>

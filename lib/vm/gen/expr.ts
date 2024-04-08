@@ -66,21 +66,25 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
 
   unaryOp(op: UnaryOperator, expr: ExprGen): ExprGen {
     const dst = this.registerAllocator.alloc();
-    const type = UNARY_OPERATOR_OPCODES[op];
-    const insns = expr.insns;
-    insns.push({ type, dst, src: expr.dst });
-    return { dst, insns };
+    const insn = { type: UNARY_OPERATOR_OPCODES[op], dst, src: expr.dst };
+    return {
+      dst,
+      insns: [...expr.insns, insn],
+    };
   }
 
   binOp(op: StrictBinaryOperator, left: ExprGen, right: ExprGen): ExprGen {
     const dst = this.registerAllocator.alloc();
-    const type = BINARY_OPERATOR_OPCODES[op];
-    const insns: RawInsn[] = [
-      ...left.insns,
-      ...right.insns,
-      { type, dst, lhs: left.dst, rhs: right.dst },
-    ];
-    return { dst, insns };
+    const insn = {
+      type: BINARY_OPERATOR_OPCODES[op],
+      dst,
+      lhs: left.dst,
+      rhs: right.dst,
+    };
+    return {
+      dst,
+      insns: [...left.insns, ...right.insns, insn],
+    };
   }
 
   binOpLazy(
@@ -97,12 +101,9 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
     }
 
     const dst = this.registerAllocator.alloc();
-    const index = this.constants.indexOf(expr.value);
+    const src = K(this.constants.indexOf(expr.value));
 
-    return {
-      dst,
-      insns: [{ type: Opcode.LOADK, dst, src: K(index) }],
-    };
+    return { dst, insns: [{ type: Opcode.LOADK, dst, src }] };
   }
 
   func(expr: FunctionExpr): ExprGen {
@@ -118,10 +119,42 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
   }
 
   index(target: ExprGen, key: string | ExprGen): ExprGen {
-    throw new Error("Method not implemented.");
+    const dst = this.registerAllocator.alloc();
+    const insns =
+      typeof key === "string" ? target.insns : [...target.insns, ...key.insns];
+    const k =
+      typeof key === "string" ? K(this.constants.indexOf(key)) : key.dst;
+    insns.push({
+      type: Opcode.GETTABLE,
+      dst,
+      src: target.dst,
+      key: k,
+    });
+    return { dst, insns };
   }
 
   call(target: ExprGen, args: ExprGen[], method?: string | undefined): ExprGen {
-    throw new Error("Method not implemented.");
+    // TODO: Support method call (call SELF)
+    if (typeof method !== "undefined") {
+      throw new Error("Method not implemented.");
+    }
+
+    const insns = target.insns;
+    for (let i = 0; i < args.length; ++i) {
+      for (let j = 0; j < args[i].insns.length; ++j) {
+        insns.push(args[i].insns[j]);
+      }
+    }
+
+    const func = this.registerAllocator.alloc();
+    insns.push({ type: Opcode.MOVE, dst: func, src: target.dst });
+    for (let i = 0; i < args.length; ++i) {
+      const dst = this.registerAllocator.alloc();
+      insns.push({ type: Opcode.MOVE, dst, src: args[i].dst });
+    }
+
+    // TODO: Populate `retvals` somehow
+    insns.push({ type: Opcode.CALL, func, arity: args.length + 1, retvals: 0 });
+    return { dst: func, insns };
   }
 }

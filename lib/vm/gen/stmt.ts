@@ -45,10 +45,7 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
     throw new Error("Method not implemented.");
   }
   while(stmt: WhileStatement): RawInsn[] {
-    const insns: RawInsn[] = [];
-    const bodyInsns = genBlock(stmt.body);
-
-    return insns;
+    throw new Error("Method not implemented.");
   }
   repeat(stmt: RepeatStatement): RawInsn[] {
     throw new Error("Method not implemented.");
