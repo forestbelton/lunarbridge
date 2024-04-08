@@ -58,7 +58,6 @@ const lengthOf: UnaryOperation = (x) => {
 };
 
 export const UNARY_OPERATIONS: Record<UnaryOperator, UnaryOperation> = {
-  "~": bitNegate,
   "-": arithNegate,
   not: (x) => !isTruthy(x),
   "#": lengthOf,

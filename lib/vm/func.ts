@@ -45,16 +45,47 @@ export class LuaFunction<Filename> {
   }
 }
 
+export const registerList = (
+  stack: LuaValue[],
+  base: number,
+  length: number
+) => {
+  return new Proxy(stack, {
+    get(target: LuaValue[], prop: string, receiver: any) {
+      if (prop === "length") {
+        return length;
+      }
+      const offset = parseInt(prop, 10);
+      if (offset < 0 || offset >= length) {
+        throw new Error();
+      }
+      return target[base + parseInt(prop, 10)];
+    },
+    set(target: LuaValue[], prop: string, value: any, receiver: any) {
+      const index = base + parseInt(prop, 10);
+      if (typeof target[index] !== "undefined") {
+        target[index] = value;
+        return true;
+      }
+      return false;
+    },
+  });
+};
+
 export class LuaFunctionContext {
   vm: LuaVM;
   func: LuaFunction<any>;
   registers: LuaValue[];
   instructionPointer: number;
 
-  constructor(vm: LuaVM, func: LuaFunction<any>) {
+  constructor(vm: LuaVM, func: LuaFunction<any>, numParams: number) {
     this.vm = vm;
     this.func = func;
-    this.registers = new Array(func.numRegisters);
+    this.registers = registerList(
+      this.vm.valueStack,
+      this.vm.valueStack.length - numParams,
+      func.numRegisters
+    );
     this.instructionPointer = 0;
   }
 

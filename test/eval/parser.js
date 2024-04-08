@@ -14,7 +14,7 @@ import {
   NIL,
   FunctionExpr,
   Block,
-} from "../../dist/parser/ast.js";
+} from "../../dist/ast/ast.js";
 
 const EPSILON = 0.000001;
 

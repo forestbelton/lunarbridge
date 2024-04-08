@@ -166,7 +166,7 @@ export class Identifier {
   }
 }
 
-export type UnaryOperator = "-" | "not" | "#" | "~";
+export type UnaryOperator = "-" | "not" | "#";
 
 export class UnaryOpExpr {
   op: UnaryOperator;
@@ -183,22 +183,19 @@ export type BinaryOperator =
   | "-"
   | "*"
   | "/"
-  | "//"
   | "^"
   | "%"
+  /* TODO: Implement 5.3 operators
+  | "//"
   | "&"
   | "~"
   | "|"
   | ">>"
-  | "<<"
+  | "<<"*/
   | ".."
-  | "<"
-  | "<="
-  | ">"
-  | ">="
-  | "=="
-  | "~="
   | LazyBinaryOperator;
+
+export type RelationalOperator = "<" | "<=" | ">" | ">=" | "==" | "~=";
 
 export type LazyBinaryOperator = "and" | "or";
 

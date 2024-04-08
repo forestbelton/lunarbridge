@@ -75,13 +75,16 @@ export const isK = (rk: RK): rk is K => rk.type === OperandType.K;
 
 type InsnT<Type extends Opcode, Data> = { type: Type } & Data;
 
-type InsnUnaryOp<Type extends Opcode> = InsnT<Type, { dst: R; src: R }>;
+type InsnUnaryOp<R, Type extends Opcode> = InsnT<Type, { dst: R; src: R }>;
 
-type InsnBinOp<Type extends Opcode> = InsnT<Type, { dst: R; lhs: RK; rhs: RK }>;
-
-type InsnRelOp<Type extends Opcode> = InsnT<
+type InsnBinOp<R, Type extends Opcode> = InsnT<
   Type,
-  { cond: boolean; lhs: RK; rhs: RK }
+  { dst: R; lhs: R | K; rhs: R | K }
+>;
+
+type InsnRelOp<R, Type extends Opcode> = InsnT<
+  Type,
+  { cond: boolean; lhs: R | K; rhs: R | K }
 >;
 
 export type BaseInsn<R> =
@@ -97,20 +100,20 @@ export type BaseInsn<R> =
   | InsnT<Opcode.SETTABLE, { table: R; key: RK; value: RK }>
   | InsnT<Opcode.NEWTABLE, { dst: R }>
   | InsnT<Opcode.SELF, { dst: R; table: R; field: RK }>
-  | InsnBinOp<Opcode.ADD>
-  | InsnBinOp<Opcode.SUB>
-  | InsnBinOp<Opcode.MUL>
-  | InsnBinOp<Opcode.DIV>
-  | InsnBinOp<Opcode.MOD>
-  | InsnBinOp<Opcode.POW>
-  | InsnUnaryOp<Opcode.UNM>
-  | InsnUnaryOp<Opcode.NOT>
-  | InsnUnaryOp<Opcode.LEN>
+  | InsnBinOp<R, Opcode.ADD>
+  | InsnBinOp<R, Opcode.SUB>
+  | InsnBinOp<R, Opcode.MUL>
+  | InsnBinOp<R, Opcode.DIV>
+  | InsnBinOp<R, Opcode.MOD>
+  | InsnBinOp<R, Opcode.POW>
+  | InsnUnaryOp<R, Opcode.UNM>
+  | InsnUnaryOp<R, Opcode.NOT>
+  | InsnUnaryOp<R, Opcode.LEN>
   | InsnT<Opcode.CONCAT, { dst: R; start: R; end: R }>
   | InsnT<Opcode.JMP, { offset: number }>
-  | InsnRelOp<Opcode.EQ>
-  | InsnRelOp<Opcode.LT>
-  | InsnRelOp<Opcode.LE>
+  | InsnRelOp<R, Opcode.EQ>
+  | InsnRelOp<R, Opcode.LT>
+  | InsnRelOp<R, Opcode.LE>
   | InsnT<Opcode.TEST, { src: R; value: boolean }>
   | InsnT<Opcode.TESTSET, { dst: R; src: R; value: boolean }>
   | InsnT<Opcode.CALL, { func: R; arity: number; retvals: R }>
@@ -121,7 +124,8 @@ export type BaseInsn<R> =
   | InsnT<Opcode.TFORLOOP, { start: R; numvars: number }>
   | InsnT<Opcode.SETLIST, { table: R; length: number }>
   | InsnT<Opcode.CLOSE, { index: number }>
-  | InsnT<Opcode.CLOSURE, { dst: R; index: number }>;
+  | InsnT<Opcode.CLOSURE, { dst: R; index: number }>
+  | InsnT<Opcode.VARARG, { start: R; arity: number }>;
 
 export type Insn = BaseInsn<R>;
 

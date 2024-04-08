@@ -10,7 +10,7 @@ import {
   Identifier,
   TableExpr,
   UnaryOpExpr,
-} from "../../dist/parser/ast.js";
+} from "../../dist/ast/ast.js";
 
 describe("evaluating expressions", () => {
   const visitor = new InterpretExprVisitor(new LuaEnvironment());
@@ -42,7 +42,7 @@ describe("evaluating expressions", () => {
   });
 
   describe("unary operations", () => {
-    describe("bitwise not", () => {
+    /*describe("bitwise not", () => {
       it("number", () => {
         expect(
           visitor.visit(new UnaryOpExpr("~", new ConstantExpr(0)))
@@ -74,7 +74,7 @@ describe("evaluating expressions", () => {
           visitor.visit(new UnaryOpExpr("~", new TableExpr([])))
         ).to.throw("attempt to perform bitwise operation on a table value");
       });
-    });
+    });*/
 
     describe("logical not", () => {
       it("boolean", () => {

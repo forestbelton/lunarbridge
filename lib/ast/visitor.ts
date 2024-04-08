@@ -1,7 +1,6 @@
 import {
   AssignStatement,
   BinOpExpr,
-  BinaryOperator,
   BreakStatement,
   CallExpr,
   CallStatement,
@@ -20,6 +19,7 @@ import {
   LazyBinaryOperator,
   RepeatStatement,
   Stmt,
+  StrictBinaryOperator,
   TableExpr,
   TableField,
   UnaryOpExpr,
@@ -30,7 +30,7 @@ import {
 
 export abstract class ExprVisitor<A> {
   abstract unaryOp(op: UnaryOperator, expr: A): A;
-  abstract binOp(op: BinaryOperator, left: A, right: A): A;
+  abstract binOp(op: StrictBinaryOperator, left: A, right: A): A;
   abstract binOpLazy(op: LazyBinaryOperator, left: A, rightLazy: () => A): A;
   abstract constant(expr: ConstantExpr): A;
   abstract func(expr: FunctionExpr): A;
