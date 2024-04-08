@@ -16,7 +16,7 @@ export type LuaFunctionLocal = {
 
 export class LuaFunction<Filename> {
   source: LuaFunctionSource<Filename>;
-  maxStackSize: number;
+  numRegisters: number;
   instructions: Insn[];
   constants: LuaConstant[];
   functions: LuaFunction<void>[];
@@ -26,7 +26,7 @@ export class LuaFunction<Filename> {
 
   constructor(
     source: LuaFunctionSource<Filename>,
-    maxStackSize: number,
+    numRegisters: number,
     instructions: Insn[],
     constants: LuaConstant[],
     functions: LuaFunction<void>[],
@@ -35,7 +35,7 @@ export class LuaFunction<Filename> {
     upvalues: string[]
   ) {
     this.source = source;
-    this.maxStackSize = maxStackSize;
+    this.numRegisters = numRegisters;
     this.instructions = instructions;
     this.constants = constants;
     this.functions = functions;
@@ -54,7 +54,7 @@ export class LuaFunctionContext {
   constructor(vm: LuaVM, func: LuaFunction<any>) {
     this.vm = vm;
     this.func = func;
-    this.registers = new Array(func.maxStackSize);
+    this.registers = new Array(func.numRegisters);
     this.instructionPointer = 0;
   }
 
