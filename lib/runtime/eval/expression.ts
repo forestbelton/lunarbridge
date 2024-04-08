@@ -7,8 +7,8 @@ import {
   StrictBinaryOperator,
   TableExpr,
   UnaryOperator,
-} from "../../parser/ast.js";
-import { ExprVisitor } from "./visitor.js";
+} from "../../ast/ast.js";
+import { ExprVisitor } from "../../ast/visitor.js";
 import { LuaError, LuaTypeError, getTypeName, isTruthy } from "../utils.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "../value.js";
 import { evalBlock } from "./block.js";

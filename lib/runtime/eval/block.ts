@@ -1,4 +1,4 @@
-import { Block } from "../../parser/ast.js";
+import { Block } from "../../ast/ast.js";
 import { LuaEnvironment, LuaTable, LuaValue } from "../value.js";
 import { InterpretExprVisitor } from "./expression.js";
 import { InterpretStatementVisitor } from "./statement.js";

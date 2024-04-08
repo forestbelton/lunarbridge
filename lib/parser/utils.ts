@@ -6,7 +6,7 @@ import {
   IndexExpr,
   UnaryOpExpr,
   UnaryOperator,
-} from "./ast.js";
+} from "../ast/ast.js";
 
 const KEYWORDS = [
   "nil",

@@ -2,7 +2,7 @@ import {
   BinaryOperator,
   LazyBinaryOperator,
   UnaryOperator,
-} from "../../parser/ast.js";
+} from "../../ast/ast.js";
 import {
   LuaError,
   LuaTypeError,

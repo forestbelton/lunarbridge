@@ -40,8 +40,9 @@ export enum Opcode {
 }
 
 export enum OperandType {
-  R = "R",
-  K = "K",
+  R = "R", // Register
+  K = "K", // Constant
+  T = "T", // Temporary
 }
 
 type Operand<T extends OperandType> = {
@@ -83,7 +84,7 @@ type InsnRelOp<Type extends Opcode> = InsnT<
   { cond: boolean; lhs: RK; rhs: RK }
 >;
 
-export type Insn =
+export type BaseInsn<R> =
   | InsnT<Opcode.MOVE, { dst: R; src: R }>
   | InsnT<Opcode.LOADK, { dst: R; src: K }>
   | InsnT<Opcode.LOADBOOL, { dst: R; value: boolean; cond: boolean }>
@@ -121,3 +122,11 @@ export type Insn =
   | InsnT<Opcode.SETLIST, { table: R; length: number }>
   | InsnT<Opcode.CLOSE, { index: number }>
   | InsnT<Opcode.CLOSURE, { dst: R; index: number }>;
+
+export type Insn = BaseInsn<R>;
+
+export type T = Operand<OperandType.T>;
+
+export const T = operand(OperandType.T);
+
+export type RawInsn = BaseInsn<T>;

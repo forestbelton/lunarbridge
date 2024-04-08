@@ -13,12 +13,12 @@ import {
   RepeatStatement,
   Var,
   WhileStatement,
-} from "../../parser/ast.js";
+} from "../../ast/ast.js";
 import { LuaError, getTypeName, isTruthy } from "../utils.js";
 import { LuaEnvironment, LuaValue } from "../value.js";
 import { evalBlock } from "./block.js";
 import { InterpretExprVisitor } from "./expression.js";
-import { StatementVisitor } from "./visitor.js";
+import { StatementVisitor } from "../../ast/visitor.js";
 
 export class InterpretStatementVisitor extends StatementVisitor<void> {
   env: LuaEnvironment;

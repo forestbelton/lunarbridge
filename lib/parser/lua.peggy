@@ -24,7 +24,7 @@
     TRUE,
     UnaryOpExpr,
     WhileStatement,
-  } from "./ast.js";
+  } from "../ast/ast.js";
 
   import {
     attachSuffixes,
