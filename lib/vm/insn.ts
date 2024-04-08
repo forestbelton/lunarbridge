@@ -45,12 +45,12 @@ export enum OperandType {
   T = "T", // Temporary
 }
 
-type Operand<T extends OperandType> = {
+export type Operand<T extends OperandType> = {
   type: T;
   index: number;
 };
 
-const operand =
+export const operand =
   <Type extends OperandType>(type: Type): ((index: number) => Operand<Type>) =>
   (index: number) => {
     if (index < 0) {
@@ -128,9 +128,3 @@ export type BaseInsn<R> =
   | InsnT<Opcode.VARARG, { start: R; arity: number }>;
 
 export type Insn = BaseInsn<R>;
-
-export type T = Operand<OperandType.T>;
-
-export const T = operand(OperandType.T);
-
-export type RawInsn = BaseInsn<T>;

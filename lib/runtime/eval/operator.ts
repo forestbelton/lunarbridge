@@ -224,21 +224,21 @@ export const BINARY_OPERATIONS: Record<
   "/": arithOp("divide", "__div", (x, y) => x / y),
   "%": arithOp("modulo", "__mod", (x, y) => x % y),
   "^": arithOp("exponentiate", "__pow", (x, y) => Math.pow(x, y)),
-  "//": arithOp("floor divide", "__idiv", (x, y) => Math.floor(x / y)),
+  /*"//": arithOp("floor divide", "__idiv", (x, y) => Math.floor(x / y)),
 
   "&": bitOp("__band", (x, y) => x & y),
   "|": bitOp("__bor", (x, y) => x | y),
   "~": bitOp("__bxor", (x, y) => x ^ y),
   "<<": bitOp("__shl", (x, y) => x << y),
-  ">>": bitOp("__shr", (x, y) => x >> y),
+  ">>": bitOp("__shr", (x, y) => x >> y),*/
 
   "..": concatenate,
 
-  "<": relOp("__lt", (x, y) => x < y),
+  /*"<": relOp("__lt", (x, y) => x < y),
   "<=": relOp("__le", (x, y) => x <= y),
   ">": relOp("__lt", (x, y) => x < y),
   ">=": relOp("__le", (x, y) => x <= y),
 
   "==": equals,
-  "~=": (x: LuaValue, y: LuaValue) => !equals(x, y),
+  "~=": (x: LuaValue, y: LuaValue) => !equals(x, y),*/
 };
