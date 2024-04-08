@@ -1,16 +1,18 @@
-import { LuaFunctionContext } from "./func.js";
 import { Opcode, R } from "./insn.js";
 import { LuaTable } from "./table.js";
 import { LuaValue, coerceString, isTable, toNumber } from "./util.js";
+import { LuaVM } from "./vm.js";
 
-export const step = (ctx: LuaFunctionContext) => {
+export const step = (vm: LuaVM) => {
   let key: LuaValue = null;
   let value: LuaValue = null;
   let table: LuaValue = null;
   let lhs: number | null = null;
   let rhs: number | null = null;
 
+  const ctx = vm.callStack[vm.callStack.length - 1];
   const insn = ctx.func.instructions[ctx.instructionPointer++];
+
   switch (insn.type) {
     case Opcode.MOVE:
       ctx.registers[insn.dst.index] = ctx.R(insn.src);
@@ -39,7 +41,7 @@ export const step = (ctx: LuaFunctionContext) => {
         throw new Error();
       }
       ctx.registers[insn.dst.index] =
-        typeof ctx.vm.globals[key] !== "undefined" ? ctx.vm.globals[key] : null;
+        typeof vm.globals[key] !== "undefined" ? vm.globals[key] : null;
       break;
 
     case Opcode.GETUPVAL:
@@ -58,7 +60,7 @@ export const step = (ctx: LuaFunctionContext) => {
       if (typeof key !== "string") {
         throw new Error();
       }
-      ctx.vm.globals[key] = ctx.R(insn.value);
+      vm.globals[key] = ctx.R(insn.value);
       break;
 
     case Opcode.SETUPVAL:

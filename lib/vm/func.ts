@@ -1,6 +1,5 @@
 import { Insn, K, R, RK, isR } from "./insn.js";
 import { LuaConstant, LuaValue } from "./util.js";
-import { LuaVM } from "./vm.js";
 
 export type LuaFunctionSource<Filename> = {
   filename: Filename;
@@ -73,17 +72,15 @@ export const registerList = (
 };
 
 export class LuaFunctionContext {
-  vm: LuaVM;
   func: LuaFunction<any>;
   registers: LuaValue[];
   instructionPointer: number;
 
-  constructor(vm: LuaVM, func: LuaFunction<any>, numParams: number) {
-    this.vm = vm;
+  constructor(stack: LuaValue[], func: LuaFunction<any>, numParams: number) {
     this.func = func;
     this.registers = registerList(
-      this.vm.valueStack,
-      this.vm.valueStack.length - numParams,
+      stack,
+      stack.length - numParams,
       func.numRegisters
     );
     this.instructionPointer = 0;
