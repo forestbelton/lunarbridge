@@ -1,4 +1,4 @@
-import { OperandType, Operand, operand, BaseInsn } from "../insn.js";
+import { OperandType, Operand, operand, BaseInsn, R } from "../insn.js";
 import { LuaValue } from "../util.js";
 
 export type T = Operand<OperandType.T>;
@@ -39,6 +39,18 @@ export class ConstantPool {
   }
 }
 
+export type Upvalue = {
+  type: "upvalue";
+  index: number;
+};
+
+export type Global = {
+  type: "global";
+  key_constant_index: number;
+};
+
+export type Loc = T | Upvalue | Global;
+
 export class GenState {
   allocator: TemporaryRegisterAllocator;
   constants: ConstantPool;
@@ -46,5 +58,9 @@ export class GenState {
   constructor() {
     this.allocator = new TemporaryRegisterAllocator();
     this.constants = new ConstantPool();
+  }
+
+  location(name: string): Loc {
+    return T(-1);
   }
 }

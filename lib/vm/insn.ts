@@ -97,7 +97,7 @@ export type BaseInsn<R> =
   | InsnT<Opcode.GETUPVAL, { dst: R; index: number }>
   | InsnT<Opcode.GETGLOBAL, { dst: R; key: K }>
   | InsnT<Opcode.GETTABLE, { dst: R; src: R; key: R | K }>
-  | InsnT<Opcode.SETGLOBAL, { table: R; key: K; value: R }>
+  | InsnT<Opcode.SETGLOBAL, { key: K; value: R }>
   | InsnT<Opcode.SETUPVAL, { index: number; value: R }>
   | InsnT<Opcode.SETTABLE, { table: R; key: R | K; value: R | K }>
   | InsnT<Opcode.NEWTABLE, { dst: R }>

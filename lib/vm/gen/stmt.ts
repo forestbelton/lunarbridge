@@ -2,11 +2,14 @@ import {
   AssignStatement,
   BreakStatement,
   CallStatement,
+  ConstantExpr,
   DeclareStatement,
   DoStatement,
+  Expr,
   ForInStatement,
   ForRangeStatement,
   FunctionStatement,
+  Identifier,
   IfElseStatement,
   LabelStatement,
   RepeatStatement,
@@ -16,7 +19,7 @@ import { StatementVisitor } from "../../ast/visitor.js";
 import { ExprGenVisitor } from "./expr.js";
 import { GenState, RawInsn, T } from "./utils.js";
 import { genBlock } from "./block.js";
-import { JumpInsn, Opcode } from "../insn.js";
+import { JumpInsn, K, Opcode, OperandType } from "../insn.js";
 
 export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
   state: GenState;
@@ -29,7 +32,47 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
   }
 
   assign(stmt: AssignStatement): RawInsn[] {
-    throw new Error("Method not implemented.");
+    const insns: RawInsn[] = [];
+
+    for (let i = 0; i < stmt.vars.length; ++i) {
+      const v = stmt.vars[i];
+
+      if (!(v instanceof Identifier)) {
+        throw new Error(
+          "complex assignment ( e.g. `a[f(1)]` ) not implemented"
+        );
+      }
+
+      const expr =
+        i < stmt.exprs.length ? stmt.exprs[i] : new ConstantExpr(null);
+
+      const exprInsns = this.exprVisitor.visit(expr);
+      insns.push(...exprInsns.insns);
+
+      const loc = this.state.location(v.name);
+      switch (loc.type) {
+        case OperandType.T:
+          insns.push({ type: Opcode.MOVE, dst: loc, src: exprInsns.dst });
+          break;
+
+        case "upvalue":
+          insns.push({
+            type: Opcode.SETUPVAL,
+            index: loc.index,
+            value: exprInsns.dst,
+          });
+          break;
+
+        case "global":
+          insns.push({
+            type: Opcode.SETGLOBAL,
+            key: K(loc.key_constant_index),
+            value: exprInsns.dst,
+          });
+      }
+    }
+
+    return insns;
   }
 
   label(stmt: LabelStatement): RawInsn[] {
