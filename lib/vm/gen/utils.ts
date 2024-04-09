@@ -61,6 +61,6 @@ export class GenState {
   }
 
   location(name: string): Loc {
-    return T(-1);
+    return { type: "global", key_constant_index: this.constants.indexOf(name) };
   }
 }

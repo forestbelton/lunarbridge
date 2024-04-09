@@ -1,17 +1,6 @@
-import { LuaRuntime } from "./build";
+import { LuaVM } from "./dist/index.js";
 
-const runtime = new LuaRuntime();
-runtime.executeScript(`
-  function fib(n)
-    a = 1
-    b = 1
-    for i = 1, n do
-      t = a + b
-      a = b
-      b = t
-    end
-    return a
-  end
+const vm = new LuaVM();
+vm.loadScript(`
+  x = 1 * 2
 `);
-
-console.log(runtime.execute("fib(10)"));

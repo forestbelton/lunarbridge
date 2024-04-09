@@ -1,2 +1,1 @@
-export { LuaRuntime } from "./runtime/runtime.js";
-export { LuaTable } from "./runtime/value.js";
+export { LuaVM } from "./vm/vm.js";
