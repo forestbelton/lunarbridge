@@ -87,6 +87,8 @@ type InsnRelOp<R, Type extends Opcode> = InsnT<
   { cond: boolean; lhs: R | K; rhs: R | K }
 >;
 
+export type JumpInsn = InsnT<Opcode.JMP, { offset: number }>;
+
 export type BaseInsn<R> =
   | InsnT<Opcode.MOVE, { dst: R; src: R }>
   | InsnT<Opcode.LOADK, { dst: R; src: K }>
@@ -110,7 +112,7 @@ export type BaseInsn<R> =
   | InsnUnaryOp<R, Opcode.NOT>
   | InsnUnaryOp<R, Opcode.LEN>
   | InsnT<Opcode.CONCAT, { dst: R; start: R; end: R }>
-  | InsnT<Opcode.JMP, { offset: number }>
+  | JumpInsn
   | InsnRelOp<R, Opcode.EQ>
   | InsnRelOp<R, Opcode.LT>
   | InsnRelOp<R, Opcode.LE>

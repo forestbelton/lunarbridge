@@ -1,10 +1,15 @@
 import { Block } from "../../ast/ast.js";
 import { StatementGenVisitor } from "./stmt.js";
-import { RawInsn } from "./utils.js";
+import { GenState, RawInsn } from "./utils.js";
 
-export const genBlock = (block: Block): RawInsn[] => {
+export const genBlock = (
+  block: Block,
+  state: GenState | null = null
+): RawInsn[] => {
+  state = state || new GenState();
+
   const insns: RawInsn[] = [];
-  const visitor = new StatementGenVisitor();
+  const visitor = new StatementGenVisitor(state);
 
   block.statements.forEach((stmt) => {
     const stmtInsns = visitor.visit(stmt);

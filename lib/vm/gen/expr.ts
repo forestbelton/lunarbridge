@@ -140,9 +140,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
 
     const insns = target.insns;
     for (let i = 0; i < args.length; ++i) {
-      for (let j = 0; j < args[i].insns.length; ++j) {
-        insns.push(args[i].insns[j]);
-      }
+      insns.push(...args[i].insns);
     }
 
     const func = this.state.allocator.alloc();
