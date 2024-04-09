@@ -10,12 +10,7 @@ import {
 } from "../../ast/ast.js";
 import { ExprVisitor } from "../../ast/visitor.js";
 import { K, Opcode } from "../insn.js";
-import {
-  ConstantPool,
-  RawInsn,
-  T,
-  TemporaryRegisterAllocator,
-} from "./utils.js";
+import { GenState, RawInsn, T } from "./utils.js";
 
 export type ExprGen = {
   dst: T;
@@ -52,20 +47,15 @@ const UNARY_OPERATOR_OPCODES: Record<
 };
 
 export class ExprGenVisitor extends ExprVisitor<ExprGen> {
-  constants: ConstantPool;
-  registerAllocator: TemporaryRegisterAllocator;
+  state: GenState;
 
-  constructor(
-    constants: ConstantPool,
-    registerAllocator: TemporaryRegisterAllocator
-  ) {
+  constructor(state: GenState) {
     super();
-    this.constants = constants;
-    this.registerAllocator = registerAllocator;
+    this.state = state;
   }
 
   unaryOp(op: UnaryOperator, expr: ExprGen): ExprGen {
-    const dst = this.registerAllocator.alloc();
+    const dst = this.state.allocator.alloc();
     const insn = { type: UNARY_OPERATOR_OPCODES[op], dst, src: expr.dst };
     return {
       dst,
@@ -74,7 +64,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
   }
 
   binOp(op: StrictBinaryOperator, left: ExprGen, right: ExprGen): ExprGen {
-    const dst = this.registerAllocator.alloc();
+    const dst = this.state.allocator.alloc();
     const insn = {
       type: BINARY_OPERATOR_OPCODES[op],
       dst,
@@ -93,7 +83,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
     rightLazy: () => ExprGen
   ): ExprGen {
     const right = rightLazy();
-    const dst = this.registerAllocator.alloc();
+    const dst = this.state.allocator.alloc();
     const insns: RawInsn[] = [
       ...left.insns,
       ...right.insns,
@@ -109,8 +99,8 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
       throw new Error();
     }
 
-    const dst = this.registerAllocator.alloc();
-    const src = K(this.constants.indexOf(expr.value));
+    const dst = this.state.allocator.alloc();
+    const src = K(this.state.constants.indexOf(expr.value));
 
     return { dst, insns: [{ type: Opcode.LOADK, dst, src }] };
   }
@@ -128,11 +118,11 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
   }
 
   index(target: ExprGen, key: string | ExprGen): ExprGen {
-    const dst = this.registerAllocator.alloc();
+    const dst = this.state.allocator.alloc();
     const insns =
       typeof key === "string" ? target.insns : [...target.insns, ...key.insns];
     const k =
-      typeof key === "string" ? K(this.constants.indexOf(key)) : key.dst;
+      typeof key === "string" ? K(this.state.constants.indexOf(key)) : key.dst;
     insns.push({
       type: Opcode.GETTABLE,
       dst,
@@ -155,10 +145,10 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
       }
     }
 
-    const func = this.registerAllocator.alloc();
+    const func = this.state.allocator.alloc();
     insns.push({ type: Opcode.MOVE, dst: func, src: target.dst });
     for (let i = 0; i < args.length; ++i) {
-      const dst = this.registerAllocator.alloc();
+      const dst = this.state.allocator.alloc();
       insns.push({ type: Opcode.MOVE, dst, src: args[i].dst });
     }
 

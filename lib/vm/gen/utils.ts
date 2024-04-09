@@ -38,3 +38,13 @@ export class ConstantPool {
     return index;
   }
 }
+
+export class GenState {
+  allocator: TemporaryRegisterAllocator;
+  constants: ConstantPool;
+
+  constructor() {
+    this.allocator = new TemporaryRegisterAllocator();
+    this.constants = new ConstantPool();
+  }
+}

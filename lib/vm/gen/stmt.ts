@@ -14,22 +14,17 @@ import {
 } from "../../ast/ast.js";
 import { StatementVisitor } from "../../ast/visitor.js";
 import { ExprGenVisitor } from "./expr.js";
-import { ConstantPool, RawInsn, TemporaryRegisterAllocator } from "./utils.js";
+import { GenState, RawInsn } from "./utils.js";
 import { genBlock } from "./block.js";
 
 export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
-  constants: ConstantPool;
-  registerAllocator: TemporaryRegisterAllocator;
+  state: GenState;
   exprVisitor: ExprGenVisitor;
 
-  constructor() {
+  constructor(state: GenState) {
     super();
-    this.constants = new ConstantPool();
-    this.registerAllocator = new TemporaryRegisterAllocator();
-    this.exprVisitor = new ExprGenVisitor(
-      this.constants,
-      this.registerAllocator
-    );
+    this.state = state;
+    this.exprVisitor = new ExprGenVisitor(state);
   }
 
   assign(stmt: AssignStatement): RawInsn[] {
@@ -51,7 +46,13 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
     throw new Error("Method not implemented.");
   }
   ifelse(stmt: IfElseStatement): RawInsn[] {
-    throw new Error("Method not implemented.");
+    const insns: RawInsn[] = [];
+    for (let ifBody of stmt.ifBodies) {
+      const cond = this.exprVisitor.visit(ifBody[0]);
+    }
+    if (stmt.elseBody !== null) {
+    }
+    return insns;
   }
   forrange(stmt: ForRangeStatement): RawInsn[] {
     throw new Error("Method not implemented.");
