@@ -92,7 +92,16 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
     left: ExprGen,
     rightLazy: () => ExprGen
   ): ExprGen {
-    throw new Error("Method not implemented.");
+    const right = rightLazy();
+    const dst = this.registerAllocator.alloc();
+    const insns: RawInsn[] = [
+      ...left.insns,
+      ...right.insns,
+      { type: Opcode.TESTSET, dst, src: left.dst, value: op === "or" },
+      { type: Opcode.JMP, offset: 1 },
+      { type: Opcode.MOVE, dst, src: right.dst },
+    ];
+    return { dst, insns };
   }
 
   constant(expr: ConstantExpr): ExprGen {
