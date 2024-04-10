@@ -114,7 +114,43 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
   }
 
   table(expr: TableExpr<ExprGen>): ExprGen {
-    throw new Error("Method not implemented.");
+    const dst = this.state.allocator.alloc();
+    const insns: RawInsn[] = [{ type: Opcode.NEWTABLE, dst }];
+
+    expr.fields.forEach((field) => {
+      let key: K | T;
+      let value: K | T;
+
+      if (field instanceof Array) {
+        if (typeof field[0] === "object") {
+          key = field[0].dst;
+          insns.push(...field[0].insns);
+        } else {
+          key = K(this.state.constants.indexOf(field[0]));
+        }
+        insns.push(...field[1].insns);
+        value = field[1].dst;
+      } else {
+        key = this.state.allocator.alloc();
+        value = field.dst;
+
+        const one = this.state.constants.indexOf(1);
+        insns.push(
+          ...field.insns,
+          { type: Opcode.LEN, dst: key, src: dst },
+          { type: Opcode.ADD, dst: key, lhs: key, rhs: K(one) }
+        );
+      }
+
+      insns.push({
+        type: Opcode.SETTABLE,
+        table: dst,
+        key,
+        value,
+      });
+    });
+
+    return { dst, insns };
   }
 
   index(target: ExprGen, key: string | ExprGen): ExprGen {
