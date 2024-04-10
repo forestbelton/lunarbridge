@@ -1,5 +1,5 @@
-import { OperandType, Operand, operand, BaseInsn, R } from "../insn.js";
-import { LuaValue } from "../util.js";
+import { OperandType, Operand, operand, BaseInsn } from "../insn.js";
+import { LuaConstant } from "../util.js";
 
 export type T = Operand<OperandType.T>;
 
@@ -20,15 +20,15 @@ export class TemporaryRegisterAllocator {
 }
 
 export class ConstantPool {
-  constants: LuaValue[];
-  indexes: Map<LuaValue, number>;
+  constants: LuaConstant[];
+  indexes: Map<LuaConstant, number>;
 
   constructor() {
     this.constants = [];
     this.indexes = new Map();
   }
 
-  indexOf(value: LuaValue): number {
+  indexOf(value: LuaConstant): number {
     let index = this.indexes.get(value);
     if (typeof index === "undefined") {
       index = this.constants.length;
@@ -62,5 +62,9 @@ export class GenState {
 
   location(name: string): Loc {
     return { type: "global", key_constant_index: this.constants.indexOf(name) };
+  }
+
+  getConstants(): LuaConstant[] {
+    return this.constants.constants;
   }
 }

@@ -1,6 +1,7 @@
 import { parse } from "../parser/parser.js";
 import { LuaFunctionContext } from "./func.js";
-import { genBlock } from "./gen/block.js";
+import { genFunc } from "./gen/block.js";
+import { step } from "./step.js";
 import { LuaValue } from "./util.js";
 
 export class LuaVM {
@@ -16,7 +17,18 @@ export class LuaVM {
 
   loadScript(script: string) {
     const block = parse(script);
-    const insns = genBlock(block);
-    console.log(insns);
+
+    const func = genFunc(block);
+    console.log(func.instructions);
+
+    const context = new LuaFunctionContext(this.valueStack, func, 0);
+    this.callStack.push(context);
+    this.run();
+  }
+
+  run() {
+    while (this.callStack.length > 0) {
+      step(this);
+    }
   }
 }

@@ -120,7 +120,7 @@ export type BaseInsn<R> =
   | InsnT<Opcode.TESTSET, { dst: R; src: R; value: boolean }>
   | InsnT<Opcode.CALL, { func: R; arity: number; retvals: number }>
   | InsnT<Opcode.TAILCALL, { func: R; arity: number }>
-  | InsnT<Opcode.RETURN, { start: R; retvals: R }>
+  | InsnT<Opcode.RETURN, { start: R; retvals: number }>
   | InsnT<Opcode.FORLOOP, { start: R; startoffset: number }>
   | InsnT<Opcode.FORPREP, { start: R; endoffset: number }>
   | InsnT<Opcode.TFORLOOP, { start: R; numvars: number }>

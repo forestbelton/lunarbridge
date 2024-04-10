@@ -78,12 +78,17 @@ export class LuaFunctionContext {
 
   constructor(stack: LuaValue[], func: LuaFunction<any>, numParams: number) {
     this.func = func;
+    this.instructionPointer = 0;
+
+    for (let i = 0; i < func.numRegisters - numParams; i++) {
+      stack.push(null);
+    }
+
     this.registers = registerList(
       stack,
-      stack.length - numParams,
+      stack.length - func.numRegisters,
       func.numRegisters
     );
-    this.instructionPointer = 0;
   }
 
   R(r: R): LuaValue {
