@@ -5,7 +5,6 @@ import {
   ConstantExpr,
   DeclareStatement,
   DoStatement,
-  Expr,
   ForInStatement,
   ForRangeStatement,
   FunctionStatement,
@@ -146,7 +145,38 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
   }
 
   forrange(stmt: ForRangeStatement): RawInsn[] {
-    throw new Error("Method not implemented.");
+    const startInsns = this.exprVisitor.visit(stmt.start);
+    const endInsns = this.exprVisitor.visit(stmt.end);
+    const stepInsns = this.exprVisitor.visit(stmt.step);
+
+    const insns = [...startInsns.insns, ...endInsns.insns, ...stepInsns.insns];
+
+    const index = this.state.allocator.alloc();
+    const end = this.state.allocator.alloc();
+    const step = this.state.allocator.alloc();
+
+    insns.push(
+      { type: Opcode.MOVE, dst: index, src: startInsns.dst },
+      { type: Opcode.MOVE, dst: end, src: endInsns.dst },
+      { type: Opcode.MOVE, dst: step, src: stepInsns.dst }
+    );
+
+    const prep: RawInsn = { type: Opcode.FORPREP, start: index, endoffset: -1 };
+    const prepOffset = insns.length;
+    insns.push(prep);
+
+    insns.push(...genBlock(stmt.body, this.state));
+
+    const endOffset = insns.length;
+    insns.push({
+      type: Opcode.FORLOOP,
+      start: index,
+      startoffset: -(endOffset - prepOffset + 1),
+    });
+
+    prep.endoffset = endOffset - prepOffset;
+
+    return insns;
   }
 
   forin(stmt: ForInStatement): RawInsn[] {
