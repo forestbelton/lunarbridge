@@ -9,7 +9,7 @@ import {
   UnaryOperator,
 } from "../../ast/ast.js";
 import { ExprVisitor } from "../../ast/visitor.js";
-import { K, Opcode } from "../insn.js";
+import { K, Opcode, OperandType } from "../insn.js";
 import { GenState, RawInsn, T } from "./utils.js";
 
 export type ExprGen = {
@@ -110,7 +110,21 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
   }
 
   identifier(expr: Identifier): ExprGen {
-    throw new Error("Method not implemented.");
+    const dst = this.state.allocator.alloc();
+    const src = this.state.location(expr.name);
+    let insn: RawInsn;
+    switch (src.type) {
+      case OperandType.T:
+        insn = { type: Opcode.MOVE, dst, src };
+        break;
+      case "upvalue":
+        insn = { type: Opcode.GETUPVAL, dst, index: src.index };
+        break;
+      case "global":
+        insn = { type: Opcode.GETGLOBAL, dst, key: K(src.key_constant_index) };
+        break;
+    }
+    return { dst, insns: [insn] };
   }
 
   table(expr: TableExpr<ExprGen>): ExprGen {
