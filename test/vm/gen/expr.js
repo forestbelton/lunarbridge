@@ -1,11 +1,6 @@
 import { expect } from "chai";
 
-import {
-  ConstantPool,
-  TemporaryRegisterAllocator,
-  T,
-  GenState,
-} from "../../../dist/vm/gen/utils.js";
+import { T, GenState } from "../../../dist/vm/gen/utils.js";
 import { ExprGenVisitor } from "../../../dist/vm/gen/expr.js";
 import { K, Opcode } from "../../../dist/vm/insn.js";
 import { ConstantExpr } from "../../../dist/ast/ast.js";
