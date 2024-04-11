@@ -18,6 +18,7 @@ import {
   LabelStatement,
   LazyBinaryOperator,
   RepeatStatement,
+  ReturnStatement,
   Stmt,
   StrictBinaryOperator,
   TableExpr,
@@ -94,6 +95,7 @@ export abstract class StatementVisitor<A> {
   abstract func(stmt: FunctionStatement): A;
   abstract declare(stmt: DeclareStatement): A;
   abstract call(stmt: CallStatement): A;
+  abstract ret(stmt: ReturnStatement): A;
 
   visit(stmt: Stmt): A {
     if (stmt instanceof AssignStatement) {
@@ -101,25 +103,27 @@ export abstract class StatementVisitor<A> {
     } else if (stmt instanceof LabelStatement) {
       return this.label(stmt);
     } else if (stmt instanceof BreakStatement) {
-      this.break(stmt);
+      return this.break(stmt);
     } else if (stmt instanceof DoStatement) {
-      this.do(stmt);
+      return this.do(stmt);
     } else if (stmt instanceof WhileStatement) {
-      this.while(stmt);
+      return this.while(stmt);
     } else if (stmt instanceof RepeatStatement) {
-      this.repeat(stmt);
+      return this.repeat(stmt);
     } else if (stmt instanceof IfElseStatement) {
-      this.ifelse(stmt);
+      return this.ifelse(stmt);
     } else if (stmt instanceof ForRangeStatement) {
-      this.forrange(stmt);
+      return this.forrange(stmt);
     } else if (stmt instanceof ForInStatement) {
-      this.forin(stmt);
+      return this.forin(stmt);
     } else if (stmt instanceof FunctionStatement) {
-      this.func(stmt);
+      return this.func(stmt);
     } else if (stmt instanceof DeclareStatement) {
-      this.declare(stmt);
+      return this.declare(stmt);
     } else if (stmt instanceof CallStatement) {
-      this.call(stmt);
+      return this.call(stmt);
+    } else if (stmt instanceof ReturnStatement) {
+      return this.ret(stmt);
     }
     throw new Error("unsupported stmt: " + stmt);
   }

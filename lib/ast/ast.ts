@@ -1,10 +1,9 @@
 export class Block {
   statements: Stmt[];
-  returnExprs: Expr[];
 
   constructor(statements: Stmt[], returnExprs: Expr[]) {
     this.statements = statements;
-    this.returnExprs = returnExprs;
+    this.statements.push(new ReturnStatement(returnExprs));
   }
 }
 
@@ -20,7 +19,8 @@ export type Stmt =
   | ForInStatement
   | FunctionStatement
   | DeclareStatement
-  | CallStatement;
+  | CallStatement
+  | ReturnStatement;
 
 export type Var = Identifier | IndexExpr;
 
@@ -145,6 +145,14 @@ export class CallStatement {
 
   constructor(call: CallExpr) {
     this.call = call;
+  }
+}
+
+export class ReturnStatement {
+  exprs: Expr[];
+
+  constructor(exprs: Expr[]) {
+    this.exprs = exprs;
   }
 }
 

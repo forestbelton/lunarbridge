@@ -12,6 +12,7 @@ import {
   IfElseStatement,
   LabelStatement,
   RepeatStatement,
+  ReturnStatement,
   WhileStatement,
 } from "../../ast/ast.js";
 import { StatementVisitor } from "../../ast/visitor.js";
@@ -193,6 +194,27 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
 
   call(stmt: CallStatement): RawInsn[] {
     const { insns } = this.exprVisitor.visit(stmt.call);
+    return insns;
+  }
+
+  ret(stmt: ReturnStatement): RawInsn[] {
+    const insns: RawInsn[] = [];
+    const results = stmt.exprs.map((expr) => this.exprVisitor.visit(expr));
+    let start: T = T(0);
+
+    results.forEach((result) => {
+      insns.push(...result.insns);
+    });
+
+    results.forEach((result) => {
+      const retval = this.state.allocator.alloc();
+      if (typeof start === "undefined") {
+        start = retval;
+      }
+      insns.push({ type: Opcode.MOVE, dst: retval, src: result.dst });
+    });
+
+    insns.push({ type: Opcode.RETURN, start, retvals: results.length + 1 });
     return insns;
   }
 }

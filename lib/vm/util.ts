@@ -3,7 +3,7 @@ import { LuaTable } from "./table.js";
 
 export type LuaConstant = null | boolean | number | string;
 
-export type LuaValue = LuaConstant | LuaFunction<any> | LuaTable;
+export type LuaValue = LuaConstant | LuaFunction | LuaTable;
 
 export const isTable = (x: LuaValue): x is LuaTable => x instanceof LuaTable;
 

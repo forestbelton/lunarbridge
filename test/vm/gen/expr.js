@@ -4,22 +4,17 @@ import {
   ConstantPool,
   TemporaryRegisterAllocator,
   T,
+  GenState,
 } from "../../../dist/vm/gen/utils.js";
 import { ExprGenVisitor } from "../../../dist/vm/gen/expr.js";
 import { K, Opcode } from "../../../dist/vm/insn.js";
 import { ConstantExpr } from "../../../dist/ast/ast.js";
 
 describe("expression generation", () => {
-  let visitor = new ExprGenVisitor(
-    new ConstantPool(),
-    new TemporaryRegisterAllocator()
-  );
+  let visitor = new ExprGenVisitor(new GenState());
 
   beforeEach(() => {
-    visitor = new ExprGenVisitor(
-      new ConstantPool(),
-      new TemporaryRegisterAllocator()
-    );
+    visitor = new ExprGenVisitor(new GenState());
   });
 
   it("constants", () => {

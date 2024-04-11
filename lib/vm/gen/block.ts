@@ -20,10 +20,6 @@ export const genBlock = (
     }
   });
 
-  if (block.returnExprs.length > 0) {
-    // TODO: Generate RETURN instruction
-  }
-
   return insns;
 };
 
@@ -47,22 +43,19 @@ const allocateInsns = (insns: RawInsn[]): Insn[] => {
 export const genFunc = (
   block: Block,
   state: GenState | null = null
-): LuaFunction<string> => {
+): LuaFunction => {
   state = state || new GenState();
 
   const insns = genBlock(block, state);
-  insns.push({ type: Opcode.RETURN, start: T(0), retvals: 1 });
-
   const allocatedInsns = allocateInsns(insns);
 
   return new LuaFunction(
-    { filename: "", lineNumberStart: 0, lineNumberEnd: 0 },
     state.allocator.nextRegisterIndex,
     allocatedInsns,
     state.getConstants(),
     [],
     [],
     [],
-    []
+    { filename: "", lineNumberStart: 0, lineNumberEnd: 0, sourceLines: [] }
   );
 };

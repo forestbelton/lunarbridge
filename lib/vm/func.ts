@@ -1,94 +1,61 @@
 import { Insn, K, R, RK, isR } from "./insn.js";
 import { LuaConstant, LuaValue } from "./util.js";
 
-export type LuaFunctionSource<Filename> = {
-  filename: Filename;
+export type LuaFunctionDebugInfo = {
+  filename?: string;
   lineNumberStart: number;
   lineNumberEnd: number;
+  sourceLines: number[];
 };
 
-export type LuaFunctionLocal = {
-  name: string;
-  pcStart: number;
-  pcEnd: number;
-};
-
-export class LuaFunction<Filename> {
-  source: LuaFunctionSource<Filename>;
+export class LuaFunction {
   numRegisters: number;
   instructions: Insn[];
   constants: LuaConstant[];
-  functions: LuaFunction<void>[];
-  sourceLines: number[];
-  locals: LuaFunctionLocal[];
+  functions: LuaFunction[];
+  locals: string[];
   upvalues: string[];
+  debug?: LuaFunctionDebugInfo;
 
   constructor(
-    source: LuaFunctionSource<Filename>,
     numRegisters: number,
     instructions: Insn[],
     constants: LuaConstant[],
-    functions: LuaFunction<void>[],
-    sourceLines: number[],
-    locals: LuaFunctionLocal[],
-    upvalues: string[]
+    functions: LuaFunction[],
+    locals: string[],
+    upvalues: string[],
+    debug?: LuaFunctionDebugInfo
   ) {
-    this.source = source;
     this.numRegisters = numRegisters;
     this.instructions = instructions;
     this.constants = constants;
     this.functions = functions;
-    this.sourceLines = sourceLines;
     this.locals = locals;
     this.upvalues = upvalues;
+    this.debug = debug;
   }
 }
 
-export const registerList = (
-  stack: LuaValue[],
-  base: number,
-  length: number
-) => {
-  return new Proxy(stack, {
-    get(target: LuaValue[], prop: string, receiver: any) {
-      if (prop === "length") {
-        return length;
-      }
-      const offset = parseInt(prop, 10);
-      if (offset < 0 || offset >= length) {
-        throw new Error();
-      }
-      return target[base + parseInt(prop, 10)];
-    },
-    set(target: LuaValue[], prop: string, value: any, receiver: any) {
-      const index = base + parseInt(prop, 10);
-      if (typeof target[index] !== "undefined") {
-        target[index] = value;
-        return true;
-      }
-      return false;
-    },
-  });
-};
-
 export class LuaFunctionContext {
-  func: LuaFunction<any>;
+  func: LuaFunction;
+  dst: R;
+  retvals: LuaValue[];
   registers: LuaValue[];
   instructionPointer: number;
 
-  constructor(stack: LuaValue[], func: LuaFunction<any>, numParams: number) {
+  constructor(func: LuaFunction, dst: R, retvals: number, params: LuaValue[]) {
     this.func = func;
-    this.instructionPointer = 0;
+    this.dst = dst;
 
-    for (let i = 0; i < func.numRegisters - numParams; i++) {
-      stack.push(null);
+    this.retvals = new Array(retvals);
+    this.retvals.fill(null);
+
+    this.registers = new Array(func.numRegisters);
+    for (let i = 0; i < func.numRegisters; i++) {
+      this.registers[i] = i < params.length ? params[i] : null;
     }
 
-    this.registers = registerList(
-      stack,
-      stack.length - func.numRegisters,
-      func.numRegisters
-    );
+    this.instructionPointer = 0;
   }
 
   R(r: R): LuaValue {
