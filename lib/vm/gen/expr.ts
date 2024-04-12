@@ -10,6 +10,7 @@ import {
 } from "../../ast/ast.js";
 import { ExprVisitor } from "../../ast/visitor.js";
 import { K, Opcode, OperandType } from "../insn.js";
+import { genFunc } from "./block.js";
 import { GenState, RawInsn, T } from "./utils.js";
 
 export type ExprGen = {
@@ -100,13 +101,24 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
     }
 
     const dst = this.state.allocator.alloc();
-    const src = K(this.state.constants.indexOf(expr.value));
+    const src = K(this.state.constants.insert(expr.value));
 
     return { dst, insns: [{ type: Opcode.LOADK, dst, src }] };
   }
 
   func(expr: FunctionExpr): ExprGen {
-    throw new Error("Method not implemented.");
+    const index = this.state.functions.length;
+    const func = genFunc(expr.body, expr.params);
+
+    this.state.functions.push(func);
+    const dst = this.state.allocator.alloc();
+
+    const insns: RawInsn[] = [{ type: Opcode.CLOSURE, dst, index }];
+    func.upvalues.forEach((upvalue) => {
+      // TODO: Generate MOVE/GETUPVAL instructions for each upvalue
+    });
+
+    return { dst, insns };
   }
 
   identifier(expr: Identifier): ExprGen {
@@ -140,7 +152,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
           key = field[0].dst;
           insns.push(...field[0].insns);
         } else {
-          key = K(this.state.constants.indexOf(field[0]));
+          key = K(this.state.constants.insert(field[0]));
         }
         insns.push(...field[1].insns);
         value = field[1].dst;
@@ -148,7 +160,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
         key = this.state.allocator.alloc();
         value = field.dst;
 
-        const one = this.state.constants.indexOf(1);
+        const one = this.state.constants.insert(1);
         insns.push(
           ...field.insns,
           { type: Opcode.LEN, dst: key, src: dst },
@@ -172,7 +184,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
     const insns =
       typeof key === "string" ? target.insns : [...target.insns, ...key.insns];
     const k =
-      typeof key === "string" ? K(this.state.constants.indexOf(key)) : key.dst;
+      typeof key === "string" ? K(this.state.constants.insert(key)) : key.dst;
     insns.push({
       type: Opcode.GETTABLE,
       dst,

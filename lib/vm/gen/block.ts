@@ -4,12 +4,7 @@ import { Insn, Opcode, OperandType } from "../insn.js";
 import { StatementGenVisitor } from "./stmt.js";
 import { GenState, RawInsn, T } from "./utils.js";
 
-export const genBlock = (
-  block: Block,
-  state: GenState | null = null
-): RawInsn[] => {
-  state = state || new GenState();
-
+export const genBlock = (block: Block, state: GenState): RawInsn[] => {
   const insns: RawInsn[] = [];
   const visitor = new StatementGenVisitor(state);
 
@@ -40,11 +35,8 @@ const allocateInsns = (insns: RawInsn[]): Insn[] => {
   return insns;
 };
 
-export const genFunc = (
-  block: Block,
-  state: GenState | null = null
-): LuaFunction => {
-  state = state || new GenState();
+export const genFunc = (block: Block, params: string[]): LuaFunction => {
+  const state = new GenState(params);
 
   const insns = genBlock(block, state);
   const allocatedInsns = allocateInsns(insns);
@@ -53,9 +45,9 @@ export const genFunc = (
     state.allocator.nextRegisterIndex,
     allocatedInsns,
     state.getConstants(),
-    [],
-    [],
-    [],
+    state.functions,
+    [...Object.keys(state.locals)],
+    state.upvalues,
     { filename: "", lineNumberStart: 0, lineNumberEnd: 0, sourceLines: [] }
   );
 };

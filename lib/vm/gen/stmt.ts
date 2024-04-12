@@ -185,11 +185,32 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
   }
 
   func(stmt: FunctionStatement): RawInsn[] {
-    throw new Error("Method not implemented.");
+    const result = this.exprVisitor.visit(stmt.func);
+    if (stmt.local) {
+      this.state.locals[stmt.name] = result.dst;
+    } else {
+      const constant = this.state.constants.insert(stmt.name);
+      result.insns.push({
+        type: Opcode.SETGLOBAL,
+        key: K(constant),
+        value: result.dst,
+      });
+    }
+    return result.insns;
   }
 
   declare(stmt: DeclareStatement): RawInsn[] {
-    throw new Error("Method not implemented.");
+    const insns: RawInsn[] = [];
+
+    stmt.names.forEach((name, i) => {
+      const expr =
+        i < stmt.exprs.length ? stmt.exprs[i] : new ConstantExpr(null);
+      const result = this.exprVisitor.visit(expr);
+      insns.push(...result.insns);
+      this.state.locals[name] = result.dst;
+    });
+
+    return insns;
   }
 
   call(stmt: CallStatement): RawInsn[] {

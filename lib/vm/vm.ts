@@ -19,8 +19,12 @@ export class LuaVM {
   loadScript(script: string) {
     const block = parse(script);
 
-    const func = genFunc(block);
+    const func = genFunc(block, []);
+
+    console.log(func.functions);
     console.log(func.instructions);
+    console.log(func.constants);
+    console.log(func.locals);
 
     this.pushContext(func, R(0), 0, []);
     this.run();
