@@ -1,3 +1,4 @@
+import { LuaFunction } from "./func.js";
 import { Opcode, R } from "./insn.js";
 import { LuaTable } from "./table.js";
 import { LuaValue, coerceString, isTable, toNumber } from "./util.js";
@@ -12,6 +13,7 @@ export const step = (vm: LuaVM) => {
 
   const ctx = vm.callStack[vm.callStack.length - 1];
   const insn = ctx.func.instructions[ctx.instructionPointer++];
+  console.log("executing insn", insn);
 
   switch (insn.type) {
     case Opcode.MOVE:
@@ -209,6 +211,18 @@ export const step = (vm: LuaVM) => {
       break;
 
     case Opcode.CALL:
+      const params: LuaValue[] = [];
+      for (let i = 0; i < insn.arity - 1; ++i) {
+        params.push(ctx.registers[insn.func.index + i]);
+      }
+
+      const func = ctx.registers[insn.func.index];
+      if (!(func instanceof LuaFunction)) {
+        throw new Error();
+      }
+      vm.pushContext(func, insn.func, insn.retvals, params);
+      break;
+
     case Opcode.TAILCALL:
     case Opcode.RETURN:
       throw new Error();
@@ -242,7 +256,11 @@ export const step = (vm: LuaVM) => {
       throw new Error();
 
     case Opcode.CLOSE:
-    case Opcode.CLOSURE:
       throw new Error();
+
+    case Opcode.CLOSURE:
+      ctx.registers[insn.dst.index] = ctx.func.functions[insn.index];
+      // TODO: Parse following MOVE/GETUPVAL meta-instructions
+      break;
   }
 };
