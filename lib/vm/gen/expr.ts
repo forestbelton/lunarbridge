@@ -212,8 +212,7 @@ export class ExprGenVisitor extends ExprVisitor<ExprGen> {
       insns.push({ type: Opcode.MOVE, dst, src: args[i].dst });
     }
 
-    // TODO: Populate `retvals` somehow
-    insns.push({ type: Opcode.CALL, func, arity: args.length + 1, retvals: 0 });
+    insns.push({ type: Opcode.CALL, func, arity: args.length + 1, retvals: 1 });
     return { dst: func, insns };
   }
 }

@@ -1,7 +1,7 @@
 import { LuaFunction } from "./func.js";
-import { Opcode, R } from "./insn.js";
+import { Insn, Opcode, R } from "./insn.js";
 import { LuaTable } from "./table.js";
-import { LuaValue, coerceString, isTable, toNumber } from "./util.js";
+import { LuaValue, coerceString, isTable, pp, toNumber } from "./util.js";
 import { LuaVM } from "./vm.js";
 
 export const step = (vm: LuaVM) => {
@@ -18,10 +18,12 @@ export const step = (vm: LuaVM) => {
   switch (insn.type) {
     case Opcode.MOVE:
       ctx.registers[insn.dst.index] = ctx.R(insn.src);
+      console.log(`MOVE ${pp(insn.dst)}, ${pp(insn.src, ctx)}`);
       break;
 
     case Opcode.LOADK:
       ctx.registers[insn.dst.index] = ctx.K(insn.src);
+      console.log(`LOADK ${pp(insn.dst)}, ${pp(insn.src, ctx)}`);
       break;
 
     case Opcode.LOADBOOL:
@@ -35,6 +37,7 @@ export const step = (vm: LuaVM) => {
       for (let i = insn.start.index; i <= insn.end.index; ++i) {
         ctx.registers[i] = null;
       }
+      console.log(`LOADNIL ${pp(insn.start)}, ${pp(insn.end)}`);
       break;
 
     case Opcode.GETGLOBAL:
@@ -44,6 +47,7 @@ export const step = (vm: LuaVM) => {
       }
       ctx.registers[insn.dst.index] =
         typeof vm.globals[key] !== "undefined" ? vm.globals[key] : null;
+      console.log(`GETGLOBAL ${pp(insn.key, ctx)}, ${pp(insn.dst, ctx)}`);
       break;
 
     case Opcode.GETUPVAL:
@@ -55,14 +59,17 @@ export const step = (vm: LuaVM) => {
         throw new Error();
       }
       ctx.registers[insn.dst.index] = table.get(ctx.RK(insn.key));
+      console.log(`GETTABLE ${pp(insn.dst)}, ${pp(insn.key, ctx)}`);
       break;
 
     case Opcode.SETGLOBAL:
       key = ctx.K(insn.key);
+      value = ctx.R(insn.value);
       if (typeof key !== "string") {
         throw new Error();
       }
-      vm.globals[key] = ctx.R(insn.value);
+      vm.globals[key] = value;
+      console.log(`SETGLOBAL ${pp(insn.key, ctx)}, ${pp(insn.value, ctx)}`);
       break;
 
     case Opcode.SETUPVAL:
@@ -224,8 +231,17 @@ export const step = (vm: LuaVM) => {
       break;
 
     case Opcode.TAILCALL:
-    case Opcode.RETURN:
       throw new Error();
+
+    case Opcode.RETURN:
+      for (let i = 0; i < Math.min(insn.retvals - 1, ctx.retvals.length); ++i) {
+        const index = insn.start.index + i;
+        ctx.retvals[i] =
+          index < ctx.registers.length ? ctx.registers[index] : null;
+      }
+      vm.popContext();
+      console.log(`RETURN ${pp(insn.start)}, ${pp(insn.retvals)}`);
+      break;
 
     case Opcode.FORPREP:
       lhs = toNumber(ctx.R(insn.start));
@@ -235,6 +251,7 @@ export const step = (vm: LuaVM) => {
       }
       ctx.registers[insn.start.index] = lhs - rhs;
       ctx.instructionPointer += insn.endoffset;
+      console.log(`FORPREP ${pp(insn.start)}, ${pp(insn.endoffset)}`);
       break;
 
     case Opcode.FORLOOP:
@@ -259,8 +276,13 @@ export const step = (vm: LuaVM) => {
       throw new Error();
 
     case Opcode.CLOSURE:
-      ctx.registers[insn.dst.index] = ctx.func.functions[insn.index];
-      // TODO: Parse following MOVE/GETUPVAL meta-instructions
+      console.log(`CLOSURE %R${insn.dst.index}, $F${insn.index}`);
+      const _func = ctx.func.functions[insn.index];
+      ctx.registers[insn.dst.index] = _func;
+      for (let i = 0; i < _func.upvalues.length; ++i) {
+        const insn = ctx.func.instructions[ctx.instructionPointer++];
+        // TODO: Parse following MOVE/GETUPVAL meta-instructions
+      }
       break;
   }
 };
