@@ -1,3 +1,6 @@
+import { LuaFunctionContext } from "./func.js";
+import { pp } from "./util.js";
+
 export enum Opcode {
   MOVE = "MOVE",
   LOADK = "LOADK",
@@ -130,3 +133,63 @@ export type BaseInsn<R> =
   | InsnT<Opcode.VARARG, { start: R; arity: number }>;
 
 export type Insn = BaseInsn<R>;
+
+export const disassembleAt = (
+  ctx: LuaFunctionContext,
+  programCounter: number
+): string =>
+  `PC=${programCounter} ` +
+  disassemble(ctx.func.instructions[programCounter], ctx);
+
+export const disassemble = (insn: Insn, ctx?: LuaFunctionContext): string => {
+  switch (insn.type) {
+    case Opcode.MOVE:
+      return `MOVE ${pp(insn.dst)}, ${pp(insn.src, ctx)}`;
+    case Opcode.LOADK:
+      return `LOADK ${pp(insn.dst)}, ${pp(insn.src, ctx)}`;
+    case Opcode.LOADNIL:
+      return `LOADNIL ${pp(insn.start)}, ${pp(insn.end)}`;
+    case Opcode.GETGLOBAL:
+      return `GETGLOBAL ${pp(insn.key, ctx)}, ${pp(insn.dst, ctx)}`;
+    case Opcode.GETTABLE:
+      return `GETTABLE ${pp(insn.dst)}, ${pp(insn.src)}, ${pp(insn.key, ctx)}`;
+    case Opcode.SETGLOBAL:
+      return `SETGLOBAL ${pp(insn.key, ctx)}, ${pp(insn.value, ctx)}`;
+    case Opcode.SETTABLE:
+      return `SETTABLE ${pp(insn.table)}, ${pp(insn.key)}, ${pp(insn.value)}`;
+    case Opcode.NEWTABLE:
+      return `NEWTABLE ${pp(insn.dst)}`;
+    case Opcode.ADD:
+      return `ADD ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.SUB:
+      return `SUB ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.MUL:
+      return `MUL ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.DIV:
+      return `DIV ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.MOD:
+      return `MOD ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.POW:
+      return `POW ${pp(insn.dst)}, ${pp(insn.lhs, ctx)}, ${pp(insn.rhs, ctx)}`;
+    case Opcode.UNM:
+      return `UNM ${pp(insn.dst)}, ${pp(insn.src, ctx)}`;
+    case Opcode.NOT:
+      return `NOT ${pp(insn.dst)}, ${pp(insn.src, ctx)}`;
+    case Opcode.LEN:
+      return `LEN ${pp(insn.dst)}, ${pp(insn.src, ctx)}`;
+    case Opcode.TEST:
+      return `TEST ${pp(insn.src, ctx)}, ${pp(insn.value)}`;
+    case Opcode.TESTSET:
+      return `TESTSET ${pp(insn.dst)}, ${pp(insn.src, ctx)}, ${pp(insn.value)}`;
+    case Opcode.CALL:
+      return `CALL ${pp(insn.func)}, ${pp(insn.arity)}, ${pp(insn.retvals)}`;
+    case Opcode.RETURN:
+      return `RETURN ${pp(insn.start)}, ${pp(insn.retvals)}`;
+    case Opcode.FORPREP:
+      return `FORPREP ${pp(insn.start)}, ${pp(insn.endoffset)}`;
+    case Opcode.CLOSURE:
+      return `CLOSURE ${pp(insn.dst)}, $F${insn.index}`;
+    default:
+      throw new Error();
+  }
+};

@@ -64,10 +64,13 @@ export const prettyPrintValue = (x: LuaValue): string => {
   return str;
 };
 
-export const pp = (rk: RK | number, ctx?: LuaFunctionContext): string => {
+export const pp = (
+  rk: RK | number | boolean,
+  ctx?: LuaFunctionContext
+): string => {
   let str: string;
 
-  if (typeof rk === "number") {
+  if (typeof rk === "number" || typeof rk === "boolean") {
     str = "$" + rk.toString();
   } else if (isR(rk)) {
     str = `%R${rk.index}`;
