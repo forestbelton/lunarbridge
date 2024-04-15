@@ -213,7 +213,7 @@ export const step = (vm: LuaVM) => {
 
     case Opcode.CALL:
       const params: LuaValue[] = [];
-      for (let i = 0; i < insn.arity - 1; ++i) {
+      for (let i = 1; i < insn.arity; ++i) {
         params.push(ctx.registers[insn.func.index + i]);
       }
 
