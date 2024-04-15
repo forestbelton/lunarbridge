@@ -175,7 +175,7 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
       startoffset: -(endOffset - prepOffset + 1),
     });
 
-    prep.endoffset = endOffset - prepOffset;
+    prep.endoffset = endOffset - prepOffset - 1;
 
     return insns;
   }
