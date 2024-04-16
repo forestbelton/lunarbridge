@@ -187,9 +187,12 @@ export const disassemble = (insn: Insn, ctx?: LuaFunctionContext): string => {
       return `RETURN ${pp(insn.start)}, ${pp(insn.retvals)}`;
     case Opcode.FORPREP:
       return `FORPREP ${pp(insn.start)}, ${pp(insn.endoffset)}`;
+    case Opcode.FORLOOP:
+      return `FORLOOP ${pp(insn.start)}, ${pp(insn.startoffset)}`;
     case Opcode.CLOSURE:
       return `CLOSURE ${pp(insn.dst)}, $F${insn.index}`;
     default:
+      console.error(insn);
       throw new Error();
   }
 };

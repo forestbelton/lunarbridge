@@ -42,7 +42,7 @@
 
 chunk = WS b:block { return b }
 
-block = stmts:statement* exprs:(RETURN @exprs? SEMI?)? { return new Block(stmts.filter(stmt => stmt !== null), exprs || []); }
+block = stmts:statement* exprs:(RETURN @exprs? SEMI?)? { return new Block(stmts, exprs); }
 
 statement
   = SEMI                                                                                 { return null }

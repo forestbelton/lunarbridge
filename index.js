@@ -17,4 +17,4 @@ vm.loadScript(`
   x = fib(10)
 `);
 
-console.log(vm.globals.fib.instructions);
+console.log(vm.globals);

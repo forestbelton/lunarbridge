@@ -172,7 +172,7 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
     insns.push({
       type: Opcode.FORLOOP,
       start: index,
-      startoffset: -(endOffset - prepOffset + 1),
+      startoffset: prepOffset - endOffset,
     });
 
     prep.endoffset = endOffset - prepOffset - 1;

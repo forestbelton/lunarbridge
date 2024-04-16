@@ -39,6 +39,8 @@ export const genFunc = (block: Block, params: string[]): LuaFunction => {
   const state = new GenState(params);
 
   const insns = genBlock(block, state);
+  insns.push({ type: Opcode.RETURN, start: T(0), retvals: 1 });
+
   const allocatedInsns = allocateInsns(insns);
 
   return new LuaFunction(

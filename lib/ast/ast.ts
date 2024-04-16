@@ -1,9 +1,11 @@
 export class Block {
   statements: Stmt[];
 
-  constructor(statements: Stmt[], returnExprs: Expr[]) {
+  constructor(statements: Stmt[], returnExprs: Expr[] | null) {
     this.statements = statements;
-    this.statements.push(new ReturnStatement(returnExprs));
+    if (returnExprs !== null) {
+      this.statements.push(new ReturnStatement(returnExprs));
+    }
   }
 }
 
