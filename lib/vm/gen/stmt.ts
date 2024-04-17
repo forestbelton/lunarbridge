@@ -221,7 +221,7 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
   ret(stmt: ReturnStatement): RawInsn[] {
     const insns: RawInsn[] = [];
     const results = stmt.exprs.map((expr) => this.exprVisitor.visit(expr));
-    let start: T | null = null;
+    let start = T(0);
 
     results.forEach((result) => {
       insns.push(...result.insns);
@@ -237,7 +237,7 @@ export class StatementGenVisitor extends StatementVisitor<RawInsn[]> {
 
     insns.push({
       type: Opcode.RETURN,
-      start: start || this.state.allocator.alloc(),
+      start: start,
       retvals: results.length + 1,
     });
     return insns;
